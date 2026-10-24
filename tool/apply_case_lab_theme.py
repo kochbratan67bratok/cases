@@ -138,13 +138,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/collection/collection_tracking_service.dart';
-import '../../data/models/container_dto.dart';
 import '../../data/models/skin_dto.dart';
 import '../../data/repositories/local_data_repository.dart';
 import '../../domain/battle_pass_progress_service.dart';
 import '../../domain/case_odds.dart';
-import '../../domain/container_simulator_service.dart';
-import '../helpers/skin_ui_helper.dart';
 
 class BattlePassScreen extends StatefulWidget {
   final LocalDataRepository repository;
@@ -160,7 +157,6 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
   static const String _claimedKey = 'case_lab_pass_claimed_levels_v1';
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
   final Random _random = Random();
-  final ContainerSimulatorService _simulator = ContainerSimulatorService();
   final CollectionTrackingService _tracking = CollectionTrackingService();
 
   int _xp = 0, _coins = 0, _caseInventoryCount = 0, _dailyOpens = 0, _weeklyOpens = 0;
