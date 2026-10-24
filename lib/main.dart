@@ -62,6 +62,10 @@ class _GameShellState extends State<GameShell> {
  OwnedSkin? upgradeSource; Skin? upgradeTarget; int upgradeAttempts=0,upgradeWins=0; final upgradeHistory=<String>[];
  int tab=0,xp=0,opened=0,serial=0,soldCredits=0; double balance=100;
  bool opening=false; Skin? lastDrop; CaseInfo selected=caseList.first;
+ final ScrollController _rollerController=ScrollController();
+ final GlobalKey _rollerViewportKey=GlobalKey();
+ List<Skin> rollItems=[]; int? rollWinnerIndex;
+ static const int _winnerSlot=28;
  String status='Choose a case and try your luck';
  int get level=>xp~/1000+1; int get levelXp=>xp%1000;
  double get progress=>levelXp/1000;
@@ -75,15 +79,79 @@ class _GameShellState extends State<GameShell> {
  Future<void> openCase() async {
   if(opening)return;
   if(balance<selected.price){setState(()=>status='Not enough virtual credits. Sell a skin first.');return;}
-  setState(() { opening=true; balance-=selected.price; lastDrop=null; status='Opening ${selected.name}…'; });
-  await Future<void>.delayed(const Duration(milliseconds:650)); if(!mounted)return;
   final drop=roll();
+  final sequence=List<Skin>.generate(38,(_)=>roll());
+  sequence[_winnerSlot]=drop;
+  setState(() {
+   opening=true; balance-=selected.price; lastDrop=null;
+   rollItems=sequence; rollWinnerIndex=_winnerSlot;
+   status='Opening ${selected.name}…';
+  });
+  await WidgetsBinding.instance.endOfFrame;
+  if(!mounted)return;
+  if(_rollerController.hasClients){
+   _rollerController.jumpTo(0);
+   final renderObject=_rollerViewportKey.currentContext?.findRenderObject();
+   final viewportWidth=renderObject is RenderBox ? renderObject.size.width : MediaQuery.of(context).size.width-56;
+   const itemWidth=118.0, itemGap=10.0, horizontalPadding=12.0;
+   final target=horizontalPadding+_winnerSlot*(itemWidth+itemGap)+itemWidth/2-viewportWidth/2;
+   final maxExtent=_rollerController.position.maxScrollExtent;
+   await _rollerController.animateTo(target.clamp(0.0,maxExtent),duration:const Duration(milliseconds:3200),curve:Curves.easeOutCubic);
+  } else {
+   await Future<void>.delayed(const Duration(milliseconds:3200));
+  }
+  if(!mounted)return;
   setState((){
    opening=false;lastDrop=drop;inventory.insert(0,OwnedSkin(drop,++serial));opened++;earnXp(100);
    for(final m in missions.where((m)=>m.title=='First drop'||m.title=='Collector')){m.progress++;}
    status='You got ${drop.name}!';
   });
  }
+ @override void dispose(){ _rollerController.dispose(); super.dispose(); }
+ Widget openingRoller()=>SizedBox(
+  height:160,
+  child:Stack(children:[
+   ListView.builder(
+    key:_rollerViewportKey,
+    controller:_rollerController,
+    scrollDirection:Axis.horizontal,
+    physics:const NeverScrollableScrollPhysics(),
+    padding:const EdgeInsets.symmetric(horizontal:12),
+    itemCount:rollItems.length,
+    itemBuilder:(context,index){
+     final item=rollItems[index];
+     final isWinner=!opening&&index==rollWinnerIndex;
+     return Container(
+      width:118,
+      margin:const EdgeInsets.only(right:10),
+      child:AnimatedContainer(
+       duration:const Duration(milliseconds:180),
+       padding:const EdgeInsets.all(9),
+       decoration:BoxDecoration(
+        color:item.color.withValues(alpha:isWinner?.22:.08),
+        borderRadius:BorderRadius.circular(14),
+        border:Border.all(color:isWinner?Colors.white:item.color.withValues(alpha:.75),width:isWinner?2.5:1.2),
+        boxShadow:isWinner?[BoxShadow(color:item.color.withValues(alpha:.35),blurRadius:16)]:null,
+       ),
+       child:Column(children:[
+        Icon(item.icon,size:34,color:item.color),
+        const Spacer(),
+        Text(item.name,textAlign:TextAlign.center,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w900)),
+        const SizedBox(height:3),
+        Text(item.weapon,textAlign:TextAlign.center,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:10,color:muted)),
+        const SizedBox(height:5),
+        Text(item.value.toStringAsFixed(2),style:TextStyle(fontSize:11,color:item.color,fontWeight:FontWeight.w900)),
+       ]),
+      ),
+     );
+    },
+   ),
+   Positioned.fill(child:IgnorePointer(child:Center(child:Container(
+    width:3,height:138,
+    decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(4),boxShadow:const [BoxShadow(color:Colors.white54,blurRadius:8)]),
+   )))),
+  ]),
+ );
  void sell(OwnedSkin item){setState((){
   inventory.remove(item);balance+=item.skin.value;soldCredits+=item.skin.value.ceil();earnXp(10);
   for(final m in missions.where((m)=>m.title=='Big spender')){m.progress=soldCredits.clamp(0,m.goal);}
@@ -125,7 +193,7 @@ class _GameShellState extends State<GameShell> {
   })),
   const SizedBox(height:14),
   box(Column(children:[
-   Container(width:90,height:90,decoration:BoxDecoration(shape:BoxShape.circle,color:(lastDrop?.color??selected.color).withValues(alpha:.12),border:Border.all(color:(lastDrop?.color??selected.color).withValues(alpha:.6),width:2)),child:Icon(opening?Icons.hourglass_top:(lastDrop?.icon??selected.icon),size:42,color:lastDrop?.color??selected.color)),
+   if(rollItems.isNotEmpty) openingRoller() else Container(width:90,height:90,decoration:BoxDecoration(shape:BoxShape.circle,color:(lastDrop?.color??selected.color).withValues(alpha:.12),border:Border.all(color:(lastDrop?.color??selected.color).withValues(alpha:.6),width:2)),child:Icon(opening?Icons.hourglass_top:(lastDrop?.icon??selected.icon),size:42,color:lastDrop?.color??selected.color)),
    const SizedBox(height:12),Text(lastDrop?.name??selected.name,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:20)),Text(lastDrop?.weapon??selected.subtitle,style:const TextStyle(color:muted,fontSize:12)),
    if(lastDrop!=null)Padding(padding:const EdgeInsets.only(top:6),child:Text('${lastDrop!.rarity} · ${lastDrop!.value.toStringAsFixed(2)}',style:TextStyle(color:lastDrop!.color,fontWeight:FontWeight.bold))),
    const SizedBox(height:8),Text(status,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:12)),const SizedBox(height:14),
