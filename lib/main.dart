@@ -281,7 +281,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
           const Text('SELECT A CASE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 12)),
           const SizedBox(height: 12),
           SizedBox(
-            height: 142,
+            height: 160,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: caseList.length,
@@ -297,8 +297,8 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
                   }),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    width: 142,
-                    padding: const EdgeInsets.all(13),
+                    width: 160,
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: selected ? item.color.withValues(alpha: 0.18) : const Color(0xFF1A202C),
                       borderRadius: BorderRadius.circular(18),
@@ -307,9 +307,9 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.inventory_2_rounded, color: item.color, size: 30),
-                        const Spacer(),
-                        Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Icon(Icons.inventory_2_rounded, color: item.color, size: 26),
+                        const SizedBox(height: 5),
+                        Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.white54)),
                         const SizedBox(height: 5),
                         Text('\${item.price.toStringAsFixed(2)}', style: TextStyle(color: item.color, fontWeight: FontWeight.w900)),
