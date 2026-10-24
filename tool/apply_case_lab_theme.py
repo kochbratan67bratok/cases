@@ -525,4 +525,128 @@ if "Future<void> recordContainerAward({" not in tracking:
         raise SystemExit("Could not locate recordStickerDrop to add case inventory support")
     tracking = tracking.replace(anchor, container_award_method + anchor, 1)
 tracking_file.write_text(tracking, encoding="utf-8")
-print("Applied Case Lab theme and added the persistent free 67-level Operation Pass.")
+
+# Integrate owned case entries into the existing inventory and consume them on opening.
+collection_file = root / "lib" / "presentation" / "screens" / "my_collection_screen.dart"
+collection = collection_file.read_text(encoding="utf-8")
+if "import 'container_open_screen.dart';" not in collection:
+    collection = collection.replace("import 'agent_details_screen.dart';", "import 'container_open_screen.dart';\nimport 'agent_details_screen.dart';", 1)
+summary_anchor = """  Future<void> _openSummary(CollectionSummary summary) async {
+    final screen = await _buildDetailsScreen("""
+summary_replacement = """  Future<void> _openSummary(CollectionSummary summary) async {
+    if (summary.category == 'container') {
+      final matches = (await widget.repository.loadContainers())
+          .where((item) => item.id == summary.latestEntry.itemId).toList();
+      if (matches.isEmpty) {
+        _showMissingItemMessage();
+        return;
+      }
+      await AppNavigationHelper.pushScreen<void>(context, ContainerOpenScreen(
+        containerDto: matches.first,
+        repository: widget.repository,
+        settingsController: widget.settingsController,
+        inventoryEntryId: summary.latestEntry.entryId,
+      ));
+      if (mounted) setState(() => _dataFuture = _loadData());
+      return;
+    }
+    final screen = await _buildDetailsScreen("""
+if "if (summary.category == 'container')" not in collection:
+    if collection.count(summary_anchor) != 1:
+        raise SystemExit("Could not locate collection summary tap handler")
+    collection = collection.replace(summary_anchor, summary_replacement, 1)
+category_anchor = """  switch (category) {
+    case 'knife':"""
+if "case 'container':\n      return 'Case';" not in collection:
+    if collection.count(category_anchor) != 1:
+        raise SystemExit("Could not locate inventory category label switch")
+    collection = collection.replace(category_anchor, """  switch (category) {
+    case 'container':
+      return 'Case';
+    case 'knife':""", 1)
+collection_file.write_text(collection, encoding="utf-8")
+
+open_file = root / "lib" / "presentation" / "screens" / "container_open_screen.dart"
+opening = open_file.read_text(encoding="utf-8")
+if "final String? inventoryEntryId;" not in opening:
+    opening = opening.replace(
+        "  final SettingsController? settingsController;\n",
+        "  final SettingsController? settingsController;\n  final String? inventoryEntryId;\n",
+        1,
+    )
+    opening = opening.replace(
+        "    required this.settingsController,\n  });",
+        "    required this.settingsController,\n    this.inventoryEntryId,\n  });",
+        1,
+    )
+    helper_anchor = "  Future<void> _openCase(List<SkinDto> skins) async {"
+    helper = """  Future<void> _consumeInventoryCase() async {
+    final entryId = widget.inventoryEntryId;
+    if (entryId != null) {
+      await _collectionTracking.removeEntry(entryId);
+    }
+  }
+
+"""
+    if opening.count(helper_anchor) != 1:
+        raise SystemExit("Could not locate case opening handler")
+    opening = opening.replace(helper_anchor, helper + helper_anchor, 1)
+    opening = opening.replace(
+        """      await _collectionTracking.recordSkinDrop(
+        drop: drop,
+        sourceName: widget.containerDto.name,
+        sourceType: widget.containerDto.typeLabel,
+      );
+      return;""",
+        """      await _collectionTracking.recordSkinDrop(
+        drop: drop,
+        sourceName: widget.containerDto.name,
+        sourceType: widget.containerDto.typeLabel,
+      );
+      await _consumeInventoryCase();
+      return;""",
+        1,
+    )
+    opening = opening.replace(
+        """    await _collectionTracking.recordSkinDrop(
+      drop: drop,
+      sourceName: widget.containerDto.name,
+      sourceType: widget.containerDto.typeLabel,
+    );
+  }
+
+  Future<void> _claimXrayDrop() async {""",
+        """    await _collectionTracking.recordSkinDrop(
+      drop: drop,
+      sourceName: widget.containerDto.name,
+      sourceType: widget.containerDto.typeLabel,
+    );
+    await _consumeInventoryCase();
+  }
+
+  Future<void> _claimXrayDrop() async {""",
+        1,
+    )
+    opening = opening.replace(
+        """    await _collectionTracking.recordSkinDrop(
+      drop: _dropped!,
+      sourceName: widget.containerDto.name,
+      sourceType: widget.containerDto.typeLabel,
+    );
+  }
+
+  Future<void> _destroyXrayDrop() async {""",
+        """    await _collectionTracking.recordSkinDrop(
+      drop: _dropped!,
+      sourceName: widget.containerDto.name,
+      sourceType: widget.containerDto.typeLabel,
+    );
+    await _consumeInventoryCase();
+  }
+
+  Future<void> _destroyXrayDrop() async {""",
+        1,
+    )
+open_file.write_text(opening, encoding="utf-8")
+
+print("Applied Case Lab theme, Operation Pass inventory rewards, and case consumption.")
