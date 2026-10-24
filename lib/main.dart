@@ -58,6 +58,7 @@ class _GameShellState extends State<GameShell> {
   Mission('Season grinder','Earn 500 season XP',500,250,Icons.bolt),
  ];
  final claimedLevels=<int>{};
+ OwnedSkin? upgradeSource; Skin? upgradeTarget; int upgradeAttempts=0,upgradeWins=0; final upgradeHistory=<String>[];
  int tab=0,xp=0,opened=0,serial=0,soldCredits=0; double balance=100;
  bool opening=false; Skin? lastDrop; CaseInfo selected=caseList.first;
  String status='Choose a case and try your luck';
@@ -90,10 +91,11 @@ class _GameShellState extends State<GameShell> {
  void claimMission(Mission m){if(!m.complete||m.claimed)return;setState(() { m.claimed=true; balance+=m.reward; });}
  void claimLevel(int n){if(n>level||claimedLevels.contains(n))return;setState(() { claimedLevels.add(n); balance+=50+n*10; });}
  @override Widget build(BuildContext context)=>Scaffold(
-  body:SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),missionPage(),inventoryPage(),profilePage()])),
+  body:SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),upgradePage(),missionPage(),inventoryPage(),profilePage()])),
   bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(i)=>setState(()=>tab=i),backgroundColor:const Color(0xFF171C27),indicatorColor:mint.withValues(alpha:.18),destinations:const[
    NavigationDestination(icon:Icon(Icons.inventory_2_outlined),selectedIcon:Icon(Icons.inventory_2),label:'Cases'),
    NavigationDestination(icon:Icon(Icons.military_tech_outlined),selectedIcon:Icon(Icons.military_tech),label:'Season'),
+   NavigationDestination(icon:Icon(Icons.auto_fix_high_outlined),selectedIcon:Icon(Icons.auto_fix_high),label:'Upgrade'),
    NavigationDestination(icon:Icon(Icons.task_alt_outlined),selectedIcon:Icon(Icons.task_alt),label:'Missions'),
    NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'Inventory'),
    NavigationDestination(icon:Icon(Icons.person_outline),selectedIcon:Icon(Icons.person),label:'Profile'),
@@ -150,6 +152,48 @@ class _GameShellState extends State<GameShell> {
   }),
   box(const Text('Demo season: progress is stored locally in memory and resets when the app restarts. Cloud saves and a real-time season timer are not connected.',style:TextStyle(color:muted,fontSize:11))),
  ]);
+
+ void doUpgrade(){
+  final source=upgradeSource; final target=upgradeTarget;
+  if(source==null||target==null||target.value<=source.skin.value)return;
+  final chance=(0.95*source.skin.value/target.value).clamp(0.002,0.80);
+  final won=random.nextDouble()<chance;
+  setState((){
+   upgradeAttempts++; inventory.remove(source);
+   if(won){inventory.insert(0,OwnedSkin(target,++serial));upgradeWins++;upgradeHistory.insert(0,'WIN · ${source.skin.name} → ${target.name}');}
+   else{upgradeHistory.insert(0,'MISS · ${source.skin.name} → ${target.name}');}
+   upgradeSource=null;upgradeTarget=null;
+   status=won?'Upgrade successful!':'Upgrade failed — stake lost.';
+  });
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(won?'Upgrade success! You got ${target.name}.':'Upgrade failed. ${source.skin.name} was lost.')));
+ }
+ Widget upgradePage()=>shell('SKIN UPGRADE','RISK A SKIN FOR A CHANCE AT A BETTER ONE',[
+  box(const Row(children:[Icon(Icons.auto_fix_high,color:mint,size:30),SizedBox(width:12),Expanded(child:Text('Choose a skin from your inventory and a more valuable target. The displayed chance is calculated before the attempt.',style:TextStyle(color:muted,fontSize:12))))])),
+  heading('1 · Your item',trailing:'INVENTORY'),
+  if(inventory.isEmpty)box(const Text('Your inventory is empty. Open a case first.',style:TextStyle(color:muted)))
+  else box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   DropdownButtonFormField<OwnedSkin>(value:inventory.contains(upgradeSource)?upgradeSource:null,isExpanded:true,decoration:const InputDecoration(labelText:'Skin to upgrade',border:OutlineInputBorder()),items:inventory.map((item)=>DropdownMenuItem(value:item,child:Text('${item.skin.name} · ${item.skin.value.toStringAsFixed(2)}',overflow:TextOverflow.ellipsis))).toList(),onChanged:(item)=>setState(()=>{upgradeSource=item,upgradeTarget=null})),
+   if(upgradeSource!=null)Padding(padding:const EdgeInsets.only(top:10),child:Text('Stake value: ${upgradeSource!.skin.value.toStringAsFixed(2)}',style:const TextStyle(color:mint,fontWeight:FontWeight.bold))),
+  ])),
+  heading('2 · Target skin',trailing:'HIGHER VALUE'),
+  box(DropdownButtonFormField<Skin>(value:upgradeTarget, isExpanded:true,decoration:const InputDecoration(labelText:'Choose target',border:OutlineInputBorder()),items:skins.where((s)=>upgradeSource!=null&&s.value>upgradeSource!.skin.value).map((s)=>DropdownMenuItem(value:s,child:Text('${s.name} · ${s.value.toStringAsFixed(2)}',overflow:TextOverflow.ellipsis))).toList(),onChanged:upgradeSource==null?null:(s)=>setState(()=>upgradeTarget=s))),
+  const SizedBox(height:12),
+  if(upgradeSource!=null&&upgradeTarget!=null)box(Column(children:[
+   const Text('SUCCESS CHANCE',style:TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.bold,letterSpacing:1)),
+   const SizedBox(height:6),Text('${(0.95*upgradeSource!.skin.value/upgradeTarget!.value*100).clamp(0.2,80).toStringAsFixed(2)}%',style:const TextStyle(color:mint,fontWeight:FontWeight.w900,fontSize:36)),
+   Text('${(upgradeTarget!.value/upgradeSource!.skin.value).toStringAsFixed(2)}× multiplier',style:const TextStyle(color:muted)),
+   const SizedBox(height:12),ClipRRect(borderRadius:BorderRadius.circular(20),child:LinearProgressIndicator(value:(0.95*upgradeSource!.skin.value/upgradeTarget!.value).clamp(0.002,0.80),minHeight:10,color:mint,backgroundColor:Colors.white10)),
+   const SizedBox(height:10),SizedBox(width:double.infinity,height:48,child:FilledButton.icon(onPressed:doUpgrade,icon:const Icon(Icons.bolt),label:const Text('TRY UPGRADE'),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:bg))),
+   const SizedBox(height:7),const Text('Failure consumes the selected item. Success replaces it with the target. Demo items only.',textAlign:TextAlign.center,style:TextStyle(color:muted,fontSize:10)),
+  ])),
+  heading('Upgrade stats'),
+  Row(children:[Expanded(child:stat(Icons.casino,'$upgradeAttempts','Attempts',mint)),const SizedBox(width:9),Expanded(child:stat(Icons.emoji_events,'$upgradeWins','Wins',const Color(0xFFFFC857)))]),
+  if(upgradeHistory.isNotEmpty)...[
+   heading('Recent attempts'),
+   ...upgradeHistory.take(8).map((entry)=>Padding(padding:const EdgeInsets.only(bottom:7),child:box(Text(entry,style:TextStyle(fontWeight:FontWeight.bold,color:entry.startsWith('WIN')?mint:const Color(0xFFFF7B7B))),padding:const EdgeInsets.all(12)))),
+  ],
+ ]);
+
  Widget missionPage()=>shell('MISSIONS','DAILY CHALLENGES · BONUS CREDITS',[
   box(const Row(children:[Icon(Icons.task_alt,color:Color(0xFFB38CFF),size:30),SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Mission board',style:TextStyle(fontWeight:FontWeight.w900,fontSize:16)),Text('Complete objectives for rewards and XP.',style:TextStyle(color:muted,fontSize:11))]))])),
   heading('Your missions',trailing:'${missions.where((m)=>m.complete).length}/4 COMPLETE'),
