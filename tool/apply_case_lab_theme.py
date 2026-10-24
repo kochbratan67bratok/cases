@@ -532,12 +532,39 @@ container_award_method = """  Future<void> recordContainerAward({
     await _prefs.setString(_entriesKey, jsonEncode(entries.map((item) => item.toJson()).toList()));
   }
 
+  Future<int> walletCredits() async => await _prefs.getInt('case_lab_wallet_credits_v1') ?? 0;
+
+  Future<int> sellEntry(String entryId, {required int credits}) async {
+    if (credits <= 0) throw ArgumentError.value(credits, 'credits');
+    final entries = List<CollectionEntry>.from(await loadEntries());
+    final index = entries.indexWhere((entry) => entry.entryId == entryId && entry.category != 'container');
+    if (index < 0) throw StateError('This item is no longer in inventory or cannot be sold.');
+    entries.removeAt(index);
+    await _prefs.setString(_entriesKey, jsonEncode(entries.map((item) => item.toJson()).toList()));
+    final balance = (await _prefs.getInt('case_lab_wallet_credits_v1') ?? 0) + credits;
+    await _prefs.setInt('case_lab_wallet_credits_v1', balance);
+    return balance;
+  }
+
 """
 if "Future<void> recordContainerAward({" not in tracking:
     anchor = "  Future<void> recordStickerDrop({"
     if tracking.count(anchor) != 1:
         raise SystemExit("Could not locate recordStickerDrop to add case inventory support")
     tracking = tracking.replace(anchor, container_award_method + anchor, 1)
+if "Future<String> recordSkinDrop({" not in tracking:
+    skin_method_anchor = "  Future<void> recordSkinDrop({"
+    if tracking.count(skin_method_anchor) != 1:
+        raise SystemExit("Could not locate recordSkinDrop to support quick selling")
+    tracking = tracking.replace(skin_method_anchor, "  Future<String> recordSkinDrop({", 1)
+    skin_start = tracking.index("  Future<String> recordSkinDrop({")
+    skin_end = tracking.index("  Future<void> recordStickerDrop({", skin_start)
+    skin_method = tracking[skin_start:skin_end]
+    skin_method = skin_method.replace("    final skin = drop.skin;", "    final skin = drop.skin\n    final entryId = _entryId();", 1)
+    skin_method = skin_method.replace("entryId: _entryId(),", "entryId: entryId,", 1)
+    skin_method = skin_method.replace("      ),\n    );\n  }\n\n", "      ),\n    );\n    return entryId;\n  }\n\n", 1)
+    tracking = tracking[:skin_start] + skin_method + tracking[skin_end:]
+
 tracking_file.write_text(tracking, encoding="utf-8")
 
 # Integrate owned case entries into the existing inventory and consume them on opening.
@@ -578,6 +605,119 @@ if "case 'container':\n      return 'Case';" not in collection:
     case 'container':
       return 'Case';
     case 'knife':""", 1)
+# Add virtual-credit selling to inventory cards (cases are not sellable).
+if "int _walletCredits = 0;" not in collection:
+    collection = collection.replace(
+        "  String _inventorySort = 'LATEST';",
+        "  String _inventorySort = 'LATEST';\n  int _walletCredits = 0;",
+        1,
+    )
+    collection = collection.replace(
+        "    _dataFuture = _loadData();",
+        "    _dataFuture = _loadData();\n    _loadWalletCredits();",
+        1,
+    )
+    collection = collection.replace(
+        "    await future;\n  }\n\n  Future<void> _clearAll()",
+        """    await future;
+    await _loadWalletCredits();
+  }
+
+  Future<void> _loadWalletCredits() async {
+    final credits = await _service.walletCredits();
+    if (mounted) setState(() => _walletCredits = credits);
+  }
+
+  int _virtualSellValueForSummary(CollectionSummary summary) {
+    if (summary.filterCategory == 'knife' || summary.filterCategory == 'gloves') return 500;
+    switch (summary.rarity.toUpperCase()) {
+      case 'MIL_SPEC': return 10;
+      case 'RESTRICTED': return 25;
+      case 'CLASSIFIED': return 75;
+      case 'COVERT': return 200;
+      default: return 5;
+    }
+  }
+
+  Future<void> _sellSummary(CollectionSummary summary) async {
+    if (summary.category == 'container') return;
+    final credits = _virtualSellValueForSummary(summary);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sell item?'),
+        content: Text('Sell ${summary.title} for $credits virtual credits? This removes one item from your inventory.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+          FilledButton.icon(onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(Icons.sell_outlined), label: Text('SELL · $credits')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final balance = await _service.sellEntry(summary.latestEntry.entryId, credits: credits);
+      await _refresh();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sold for $credits virtual credits · wallet balance $balance')),
+      );
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not sell item: $error')));
+    }
+  }
+
+  Future<void> _clearAll()""",
+        1,
+    )
+    collection = collection.replace(
+        "title: const Text('My Collection'),",
+        "title: Text('My Collection · $_walletCredits credits'),",
+        1,
+    )
+    collection = collection.replace(
+        "onItemTap: _openSummary,",
+        "onItemTap: _openSummary,\n                  onItemSell: _sellSummary,",
+        1,
+    )
+    collection = collection.replace(
+        "  final ValueChanged<CollectionSummary> onItemTap;\n\n  const _InventoryTab({",
+        "  final ValueChanged<CollectionSummary> onItemTap;\n  final ValueChanged<CollectionSummary> onItemSell;\n\n  const _InventoryTab({",
+        1,
+    )
+    collection = collection.replace(
+        "    required this.onItemTap,\n  });",
+        "    required this.onItemTap,\n    required this.onItemSell,\n  });",
+        1,
+    )
+    collection = collection.replace(
+        """_InventoryCard(
+                        summary: widget.summaries[index ~/ 2],
+                        onTap: () =>
+                            widget.onItemTap(widget.summaries[index ~/ 2]),
+                      ),""",
+        """_InventoryCard(
+                        summary: widget.summaries[index ~/ 2],
+                        onTap: () => widget.onItemTap(widget.summaries[index ~/ 2]),
+                        onSell: widget.summaries[index ~/ 2].category == 'container'
+                            ? null
+                            : () => widget.onItemSell(widget.summaries[index ~/ 2]),
+                      ),""",
+        1,
+    )
+    collection = collection.replace(
+        "class _InventoryCard extends StatelessWidget {\n  final CollectionSummary summary;\n  final VoidCallback onTap;\n\n  const _InventoryCard({required this.summary, required this.onTap});",
+        "class _InventoryCard extends StatelessWidget {\n  final CollectionSummary summary;\n  final VoidCallback onTap;\n  final VoidCallback? onSell;\n\n  const _InventoryCard({required this.summary, required this.onTap, this.onSell});",
+        1,
+    )
+    collection = collection.replace(
+        "              const SizedBox(width: 8),\n              const Icon(Icons.chevron_right, color: Colors.white38),",
+        """              const SizedBox(width: 8),
+              if (onSell != null)
+                TextButton.icon(onPressed: onSell, icon: const Icon(Icons.sell_outlined, size: 16), label: const Text('SELL'))
+              else
+                const Icon(Icons.chevron_right, color: Colors.white38),""",
+        1,
+    )
 collection_file.write_text(collection, encoding="utf-8")
 
 open_file = root / "lib" / "presentation" / "screens" / "container_open_screen.dart"
@@ -661,6 +801,77 @@ if "final String? inventoryEntryId;" not in opening:
   Future<void> _destroyXrayDrop() async {""",
         1,
     )
+if "String? _lastDropEntryId;" not in opening:
+    opening = opening.replace("  DroppedSkin? _dropped;", "  DroppedSkin? _dropped;\n  String? _lastDropEntryId;", 1)
+
+if "Future<void> _sellLastDrop()" not in opening:
+    sell_helper = """  int _virtualSellValue(SkinDto skin) {
+    if (skin.isSpecialItem) return 500;
+    switch (skin.rarity) {
+      case 'MIL_SPEC': return 10;
+      case 'RESTRICTED': return 25;
+      case 'CLASSIFIED': return 75;
+      case 'COVERT': return 200;
+      default: return 5;
+    }
+  }
+
+  Future<void> _sellLastDrop() async {
+    final entryId = _lastDropEntryId;
+    final drop = _dropped;
+    if (entryId == null || drop == null) return;
+    final credits = _virtualSellValue(drop.skin);
+    try {
+      final balance = await _collectionTracking.sellEntry(entryId, credits: credits);
+      if (!mounted) return;
+      setState(() => _lastDropEntryId = null);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Sold for $credits virtual credits · wallet balance $balance'),
+      ));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not sell item: $error')));
+    }
+  }
+
+"""
+    opening = opening.replace("  Future<void> _consumeInventoryCase() async {", sell_helper + "  Future<void> _consumeInventoryCase() async {", 1)
+
+if "final entryId = await _collectionTracking.recordSkinDrop(" not in opening:
+    opening = opening.replace("await _collectionTracking.recordSkinDrop(", "final entryId = await _collectionTracking.recordSkinDrop(")
+    opening = opening.replace(
+        "      );\n      await _consumeInventoryCase();",
+        "      );\n      if (mounted) setState(() => _lastDropEntryId = entryId);\n      await _consumeInventoryCase();",
+        1,
+    )
+    opening = opening.replace(
+        "    );\n    await _consumeInventoryCase();",
+        "    );\n    if (mounted) setState(() => _lastDropEntryId = entryId);\n    await _consumeInventoryCase();",
+        1,
+    )
+    opening = opening.replace(
+        "    );\n    await _consumeInventoryCase();",
+        "    );\n    if (mounted) setState(() => _lastDropEntryId = entryId);\n    await _consumeInventoryCase();",
+        1,
+    )
+
+if "SELL FOR" not in opening:
+    opening = opening.replace(
+        "            if (_dropped != null)\n              SliverToBoxAdapter(child: SkinDropCard(drop: _dropped!)),",
+        """            if (_dropped != null)
+              SliverToBoxAdapter(child: Column(children: [
+                SkinDropCard(drop: _dropped!),
+                if (_lastDropEntryId != null)
+                  Padding(padding: const EdgeInsets.all(12), child: SizedBox(width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _sellLastDrop,
+                      icon: const Icon(Icons.sell_outlined),
+                      label: Text('SELL FOR ${_virtualSellValue(_dropped!.skin)} CREDITS'),
+                    ),
+                  )),
+              ])),""",
+        1,
+    )
+
 open_file.write_text(opening, encoding="utf-8")
 
 print("Applied Case Lab theme, Operation Pass inventory rewards, and case consumption.")
