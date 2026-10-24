@@ -96,7 +96,7 @@ class _GameShellState extends State<GameShell> {
    const itemWidth=118.0, itemGap=10.0, horizontalPadding=12.0;
    final target=horizontalPadding+_winnerSlot*(itemWidth+itemGap)+itemWidth/2-viewportWidth/2;
    final maxExtent=_rollerController.position.maxScrollExtent;
-   await _rollerController.animateTo(target.clamp(0.0,maxExtent),duration:const Duration(milliseconds:3200),curve:Curves.easeOutCubic);
+   await _rollerController.animateTo(target.clamp(0.0,maxExtent).toDouble(),duration:const Duration(milliseconds:3200),curve:Curves.easeOutCubic);
   } else {
    await Future<void>.delayed(const Duration(milliseconds:3200));
   }
