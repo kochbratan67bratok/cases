@@ -172,7 +172,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
             SliverToBoxAdapter(child: _dropPanel()),
             SliverToBoxAdapter(child: _inventoryTitle()),
             if (_inventory.isEmpty)
-              const SliverToBoxAdapter(child: _emptyInventory())
+              SliverToBoxAdapter(child: _emptyInventory())
             else
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
