@@ -854,6 +854,54 @@ if "final entryId = await _collectionTracking.recordSkinDrop(" not in opening:
         1,
     )
 
+opening = opening.replace(
+    """      setState(() {
+        _dropped = drop;
+        _rollSequence = const [];
+        _isRolling = false;
+        _resetXrayState();
+      });""",
+    """      setState(() {
+        _dropped = drop;
+        _lastDropEntryId = null;
+        _rollSequence = const [];
+        _isRolling = false;
+        _resetXrayState();
+      });""",
+    1,
+)
+opening = opening.replace(
+    """    setState(() {
+      _isRolling = true;
+      _dropped = null;
+      _rollSequence = rollData.items;""",
+    """    setState(() {
+      _isRolling = true;
+      _dropped = null;
+      _lastDropEntryId = null;
+      _rollSequence = rollData.items;""",
+    1,
+)
+opening = opening.replace(
+    """  Future<void> _destroyXrayDrop() async {
+    setState(() {
+      _pendingXrayDrop = null;
+      _dropped = null;
+      _xrayRevealActive = false;
+    });
+  }""",
+    """  Future<void> _destroyXrayDrop() async {
+    setState(() {
+      _pendingXrayDrop = null;
+      _dropped = null;
+      _lastDropEntryId = null;
+      _xrayRevealActive = false;
+    });
+    await _consumeInventoryCase();
+  }""",
+    1,
+)
+
 if "SELL FOR" not in opening:
     opening = opening.replace(
         "            if (_dropped != null)\n              SliverToBoxAdapter(child: SkinDropCard(drop: _dropped!)),",
