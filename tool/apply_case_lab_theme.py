@@ -156,20 +156,17 @@ class BattlePassScreen extends StatefulWidget {
 class _BattlePassScreenState extends State<BattlePassScreen> {
   static const int _maxLevel = 67;
   static const int _xpPerLevel = 500;
-  static const int _ticketPrice = 1000;
   static const String _coinsKey = 'case_lab_pass_coins_v1';
-  static const String _ticketsKey = 'case_lab_pass_case_tickets_v1';
   static const String _claimedKey = 'case_lab_pass_claimed_levels_v1';
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
   final Random _random = Random();
   final ContainerSimulatorService _simulator = ContainerSimulatorService();
   final CollectionTrackingService _tracking = CollectionTrackingService();
 
-  int _xp = 0, _coins = 0, _tickets = 0, _dailyOpens = 0, _weeklyOpens = 0;
-  bool _dailyClaimed = false, _weeklyClaimed = false, _busy = false;
+  int _xp = 0, _coins = 0, _caseInventoryCount = 0, _dailyOpens = 0, _weeklyOpens = 0;
+  bool _dailyClaimed = false, _weeklyClaimed = false;
   Set<int> _claimed = <int>{};
   List<SkinDto> _knives = <SkinDto>[];
-  String? _lastDrop;
 
   int get _level {
     final value = _xp ~/ _xpPerLevel + 1;
@@ -192,7 +189,8 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
         .map(int.parse).toSet();
     final xp = await _prefs.getInt(BattlePassProgressService.xpKey) ?? 0;
     final coins = await _prefs.getInt(_coinsKey) ?? 0;
-    final tickets = await _prefs.getInt(_ticketsKey) ?? 0;
+    final inventoryEntries = await _tracking.loadEntries();
+    final caseInventoryCount = inventoryEntries.where((entry) => entry.category == 'container').length;
     final dailyOpens = await BattlePassProgressService.dailyOpens();
     final weeklyOpens = await BattlePassProgressService.weeklyOpens();
     final dailyClaimed = await BattlePassProgressService.dailyClaimed();
@@ -200,31 +198,36 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
     if (!mounted) return;
     setState(() {
       _knives = knives; _claimed = claimed; _xp = xp; _coins = coins; _tickets = tickets;
-      _dailyOpens = dailyOpens; _weeklyOpens = weeklyOpens;
+      _dailyOpens = dailyOpens; _weeklyOpens = weeklyOpens; _caseInventoryCount = caseInventoryCount;
       _dailyClaimed = dailyClaimed; _weeklyClaimed = weeklyClaimed;
     });
   }
 
   int _coinsForLevel(int n) => n == _maxLevel ? 1500 : 100 + n * 15;
-  int _ticketsForLevel(int n) => n == _maxLevel ? 1 : n % 10 == 0 ? 2 : n % 5 == 0 ? 1 : 0;
+  int _casesForLevel(int n) => n == _maxLevel ? 1 : n % 10 == 0 ? 2 : n % 5 == 0 ? 1 : 0;
   String _rewardTitle(int n) {
-    final coins = _coinsForLevel(n), tickets = _ticketsForLevel(n);
-    if (n == _maxLevel) return 'FINAL REWARD · Special Case + $coins coins';
-    if (tickets == 2) return '2 case tickets + $coins coins';
-    if (tickets == 1) return 'Case ticket + $coins coins';
+    final coins = _coinsForLevel(n), cases = _casesForLevel(n);
+    if (n == _maxLevel) return 'FINAL REWARD · CS2 case + $coins coins';
+    if (cases == 2) return '2 CS2 cases + $coins coins';
+    if (cases == 1) return 'CS2 case + $coins coins';
     return '$coins coins';
   }
 
   Future<void> _claimLevel(int n) async {
     if (n > _level || _claimed.contains(n)) return;
+    try {
+      for (var i = 0; i < _casesForLevel(n); i++) { await _awardCase(n); }
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add case: $error')));
+      return;
+    }
     final coins = _coins + _coinsForLevel(n);
-    final tickets = _tickets + _ticketsForLevel(n);
     final claimed = <int>{..._claimed, n};
     await _prefs.setInt(_coinsKey, coins);
-    await _prefs.setInt(_ticketsKey, tickets);
     await _prefs.setStringList(_claimedKey, claimed.map((v) => '$v').toList()..sort());
     if (!mounted) return;
-    setState(() { _coins = coins; _tickets = tickets; _claimed = claimed; });
+    setState(() { _coins = coins; _claimed = claimed; });
+    await _refresh();
   }
 
   Future<void> _claimDaily() async {
@@ -239,65 +242,11 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
     await BattlePassProgressService.addXp(1000);
     await _refresh();
   }
-  Future<void> _buyTicket() async {
-    if (_coins < _ticketPrice || _busy) return;
-    final coins = _coins - _ticketPrice, tickets = _tickets + 1;
-    await _prefs.setInt(_coinsKey, coins);
-    await _prefs.setInt(_ticketsKey, tickets);
-    if (mounted) setState(() { _coins = coins; _tickets = tickets; });
-  }
-
-  Future<void> _openTicket() async {
-    if (_tickets <= 0 || _busy) return;
-    setState(() => _busy = true);
-    final remaining = _tickets - 1;
-    await _prefs.setInt(_ticketsKey, remaining);
-    if (mounted) setState(() => _tickets = remaining);
-    try {
-      final cases = (await widget.repository.loadContainers())
-          .where((container) => container.isRegularCase).toList()..shuffle(_random);
-      ContainerDto? selected;
-      List<SkinDto>? pool;
-      for (final candidate in cases) {
-        final skins = await widget.repository.loadSkinsForContainer(candidate.id);
-        if (skins.isNotEmpty && skins.any((skin) => skin.isSpecialItem)) {
-          selected = candidate; pool = skins; break;
-        }
-      }
-      if (selected == null || pool == null) throw StateError('No compatible case pool found.');
-      final openedCase = selected;
-      final drop = _simulator.openCase(skins: pool, containerDto: openedCase);
-      await _tracking.recordSkinDrop(
-        drop: drop, sourceName: 'Operation Pass · ${openedCase.name}',
-        sourceType: openedCase.typeLabel,
-      );
-      if (!mounted) return;
-      setState(() => _lastDrop = drop.fullDisplayName);
-      await _refresh();
-      if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('FREE CASE OPENED'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            Image.asset(drop.skin.skinImage, height: 130, fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => const Icon(Icons.inventory_2, size: 72)),
-            const SizedBox(height: 10),
-            Text(drop.fullDisplayName, textAlign: TextAlign.center,
-              style: TextStyle(color: SkinUiHelper.rarityColor(drop.skin), fontWeight: FontWeight.w900)),
-            const SizedBox(height: 6),
-            Text(openedCase.name, style: Theme.of(dialogContext).textTheme.bodySmall),
-          ]),
-          actions: [TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('CONTINUE'))],
-        ),
-      );
-    } catch (error) {
-      final refund = _tickets;
-      await _prefs.setInt(_ticketsKey, refund + 1);
-      if (mounted) setState(() { _tickets = refund + 1; _lastDrop = 'Could not open case: $error'; });
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+  Future<void> _awardCase(int level) async {
+    final cases = (await widget.repository.loadContainers()).where((c) => c.isRegularCase).toList();
+    if (cases.isEmpty) throw StateError('No regular CS2 cases are available.');
+    final selected = cases[_random.nextInt(cases.length)];
+    await _tracking.recordContainerAward(container: selected, sourceName: 'Operation Pass · Level $level');
   }
 
   Future<void> _showAllKnives() async {
@@ -373,7 +322,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
 
   Widget _rewardTile(int n) {
     final unlocked = n <= _level, claimed = _claimed.contains(n);
-    final finalLevel = n == _maxLevel, tickets = _ticketsForLevel(n);
+    final finalLevel = n == _maxLevel, cases = _casesForLevel(n);
     final color = finalLevel ? Colors.amber : n >= 50 ? Colors.purpleAccent : n >= 25 ? Colors.lightBlueAccent : const Color(0xFF55D6BE);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -383,11 +332,11 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
         Container(width: 42, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: .13), borderRadius: BorderRadius.circular(10)),
           alignment: Alignment.center, child: Text('$n', style: TextStyle(color: unlocked ? color : Colors.white38, fontWeight: FontWeight.w900))),
         const SizedBox(width: 11),
-        Icon(finalLevel ? Icons.workspace_premium : tickets > 0 ? Icons.inventory_2 : Icons.monetization_on, color: unlocked ? color : Colors.white30),
+        Icon(finalLevel ? Icons.workspace_premium : cases > 0 ? Icons.inventory_2 : Icons.monetization_on, color: unlocked ? color : Colors.white30),
         const SizedBox(width: 9),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(_rewardTitle(n), style: TextStyle(fontWeight: FontWeight.w800, color: finalLevel ? Colors.amber : null, fontSize: 12)),
-          Text(finalLevel ? 'Real CS2 case pool · authentic rarity odds' : tickets > 0 ? 'Free case opening tickets' : 'Free season reward',
+          Text(cases > 0 ? 'Case is added to inventory unopened' : 'Coins are added to your balance',
             style: const TextStyle(color: Colors.white54, fontSize: 10)),
         ])),
         if (claimed) const Icon(Icons.check_circle, color: Color(0xFF55D6BE))
@@ -434,16 +383,10 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
             Row(children: [
               Expanded(child: _stat('COINS', '$_coins', Icons.monetization_on, Colors.amber)),
               const SizedBox(width: 8),
-              Expanded(child: _stat('CASE TICKETS', '$_tickets', Icons.inventory_2, const Color(0xFF55D6BE))),
+              Expanded(child: _stat('CASES IN INVENTORY', '$_caseInventoryCount', Icons.inventory_2, const Color(0xFF55D6BE))),
             ]),
-            const SizedBox(height: 12),
-            SizedBox(width: double.infinity, child: FilledButton.icon(
-              onPressed: _tickets > 0 && !_busy ? _openTicket : null,
-              icon: _busy ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.lock_open),
-              label: Text(_busy ? 'OPENING…' : 'OPEN FREE CASE'),
-            )),
-            if (_lastDrop != null) Padding(padding: const EdgeInsets.only(top: 8),
-              child: Text('Last drop: $_lastDrop', style: const TextStyle(color: Color(0xFF55D6BE), fontSize: 11))),
+            const SizedBox(height: 8),
+            const Text('Case rewards are stored unopened in your inventory. Open them whenever you want from the Inventory screen.', style: TextStyle(color: Colors.white60, fontSize: 11, height: 1.35)),
           ]),
         ),
         const SizedBox(height: 12),
@@ -470,8 +413,6 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
           const SizedBox(height: 12),
           OutlinedButton.icon(onPressed: _showAllKnives, icon: const Icon(Icons.content_cut), label: Text('BROWSE ALL ${_knives.length} KNIFE FINISHES')),
           const SizedBox(height: 8),
-          OutlinedButton.icon(onPressed: _coins >= _ticketPrice && !_busy ? _buyTicket : null,
-            icon: const Icon(Icons.swap_horiz), label: const Text('EXCHANGE 1000 COINS FOR A CASE TICKET')),
         ]))),
         Row(children: [
           const Expanded(child: Text('FREE REWARD TRACK', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: .8))),
@@ -480,7 +421,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
         const SizedBox(height: 10),
         ...List.generate(_maxLevel, (index) => _rewardTile(index + 1)),
         const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text(
-          'Free offline simulator pass. Knife models and finishes come from the upstream CS2 dataset. Coins are in-game only and are not Steam wallet funds.',
+          'Free offline simulator pass. Cases and skins stay in your local inventory until you choose to open or manage them. Coins are in-game only and are not Steam wallet funds.',
           style: TextStyle(color: Colors.white54, fontSize: 11))),
       ])),
     );
@@ -488,8 +429,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
 }
 """
 
-if not pass_file.exists():
-    pass_file.write_text(pass_screen_source, encoding="utf-8")
+pass_file.write_text(pass_screen_source, encoding="utf-8")
 if not progress_file.exists():
     progress_file.write_text(progress_source, encoding="utf-8")
 
@@ -507,7 +447,7 @@ pass_tile = trade_up_anchor + """
                             _ActionTile(
                               icon: Icons.military_tech,
                               title: 'Free Operation Pass · 67 levels',
-                              subtitle: 'Coins, free case tickets, missions, and real CS2 knife pools',
+                              subtitle: 'Coins, cases stored in inventory, missions, and real CS2 item pools',
                               onTap: () => _push(
                                 context,
                                 BattlePassScreen(repository: repository),
@@ -544,5 +484,45 @@ if "await BattlePassProgressService.recordCaseOpened();" not in tracking:
     if tracking.count(record_anchor) != 1:
         raise SystemExit("Could not find the recordSkinDrop completion anchor")
     tracking = tracking.replace(record_anchor, record_replacement, 1)
+if "import '../../data/models/container_dto.dart';" not in tracking:
+    tracking = tracking.replace("import '../../data/models/skin_dto.dart';", "import '../../data/models/skin_dto.dart';\nimport '../../data/models/container_dto.dart';", 1)
+container_award_method = """  Future<void> recordContainerAward({
+    required ContainerDto container,
+    required String sourceName,
+  }) async {
+    final entryId = _entryId();
+    await _appendEntry(CollectionEntry(
+      entryId: entryId,
+      category: 'container',
+      filterCategory: 'container',
+      itemId: container.id,
+      stackKey: 'container:$entryId',
+      title: container.name,
+      subtitle: 'Unopened case · tap to open',
+      imagePath: container.containerImage,
+      rarity: 'CASE',
+      sourceName: sourceName,
+      sourceType: 'Battle Pass',
+      acquiredAt: DateTime.now(),
+      isStatTrak: false,
+      isSouvenir: false,
+      floatValue: null,
+      exterior: null,
+      patternSeed: null,
+    ));
+  }
+
+  Future<void> removeEntry(String entryId) async {
+    final entries = List<CollectionEntry>.from(await loadEntries())
+      ..removeWhere((entry) => entry.entryId == entryId);
+    await _prefs.setString(_entriesKey, jsonEncode(entries.map((item) => item.toJson()).toList()));
+  }
+
+"""
+if "Future<void> recordContainerAward({" not in tracking:
+    anchor = "  Future<void> recordStickerDrop({"
+    if tracking.count(anchor) != 1:
+        raise SystemExit("Could not locate recordStickerDrop to add case inventory support")
+    tracking = tracking.replace(anchor, container_award_method + anchor, 1)
 tracking_file.write_text(tracking, encoding="utf-8")
 print("Applied Case Lab theme and added the persistent free 67-level Operation Pass.")
