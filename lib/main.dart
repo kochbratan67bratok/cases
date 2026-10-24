@@ -147,7 +147,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
     setState(() {
       _inventory.remove(item);
       _balance += item.skin.value;
-      _status = 'Sold ${item.skin.name} for \${item.skin.value.toStringAsFixed(2)}';
+      _status = 'Sold ${item.skin.name} for ${item.skin.value.toStringAsFixed(2)}';
     });
   }
 
@@ -156,7 +156,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
     setState(() {
       _inventory.clear();
       _balance += total;
-      _status = 'Sold all items for \${total.toStringAsFixed(2)}';
+      _status = 'Sold all items for ${total.toStringAsFixed(2)}';
     });
   }
 
@@ -226,7 +226,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
               children: [
                 const Icon(Icons.account_balance_wallet, color: Color(0xFF55D6BE), size: 17),
                 const SizedBox(width: 7),
-                Text('\${_balance.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('${_balance.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -312,7 +312,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
                         Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.white54)),
                         const SizedBox(height: 5),
-                        Text('\${item.price.toStringAsFixed(2)}', style: TextStyle(color: item.color, fontWeight: FontWeight.w900)),
+                        Text('${item.price.toStringAsFixed(2)}', style: TextStyle(color: item.color, fontWeight: FontWeight.w900)),
                       ],
                     ),
                   ),
@@ -360,7 +360,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
               const SizedBox(height: 7),
               Text(_drop!.rarity.toUpperCase(), style: TextStyle(color: _drop!.color, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
-              Text('Estimated value: \${_drop!.value.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('Estimated value: ${_drop!.value.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
             const SizedBox(height: 13),
             Text(_status, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54, fontSize: 12)),
@@ -371,7 +371,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
               child: FilledButton.icon(
                 onPressed: _opening ? null : _openCase,
                 icon: Icon(_opening ? Icons.hourglass_empty : Icons.lock_open_rounded),
-                label: Text(_opening ? 'OPENING…' : 'OPEN CASE  ·  \${_selected.price.toStringAsFixed(2)}'),
+                label: Text(_opening ? 'OPENING…' : 'OPEN CASE  ·  ${_selected.price.toStringAsFixed(2)}'),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF55D6BE),
                   foregroundColor: const Color(0xFF10141D),
@@ -440,7 +440,7 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
           const SizedBox(height: 6),
           Row(
             children: [
-              Expanded(child: Text('\${item.skin.value.toStringAsFixed(2)}', style: TextStyle(color: item.skin.color, fontWeight: FontWeight.w900))),
+              Expanded(child: Text('${item.skin.value.toStringAsFixed(2)}', style: TextStyle(color: item.skin.color, fontWeight: FontWeight.w900))),
               InkWell(
                 onTap: () => _sell(item),
                 borderRadius: BorderRadius.circular(8),
