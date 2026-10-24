@@ -170,7 +170,7 @@ class _GameShellState extends State<GameShell> {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(won?'Upgrade success! You got ${target.name}.':'Upgrade failed. ${source.skin.name} was lost.')));
  }
  Widget upgradePage()=>shell('SKIN UPGRADE','RISK A SKIN FOR A CHANCE AT A BETTER ONE',[
-  box(const Row(children:[Icon(Icons.auto_fix_high,color:mint,size:30),SizedBox(width:12),Expanded(child:Text('Choose a skin from your inventory and a more valuable target. The displayed chance is calculated before the attempt.',style:TextStyle(color:muted,fontSize:12))))])),
+  box(const Row(children:[Icon(Icons.auto_fix_high,color:mint,size:30),SizedBox(width:12),Expanded(child:Text('Choose a skin from your inventory and a more valuable target. The displayed chance is calculated before the attempt.',style:TextStyle(color:muted,fontSize:12)))])),
   heading('1 · Your item',trailing:'INVENTORY'),
   if(inventory.isEmpty)box(const Text('Your inventory is empty. Open a case first.',style:TextStyle(color:muted)))
   else box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
