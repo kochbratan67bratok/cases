@@ -79,7 +79,7 @@ class _GameShellState extends State<GameShell> {
  int duelRounds=3,duelCount=0,duelWins=0; bool duelRunning=false; List<Skin> duelPlayerDrops=[],duelBotDrops=[]; String duelResult='Create a duel against the bot.';
  OwnedSkin? upgradeSource; Skin? upgradeTarget; int upgradeAttempts=0,upgradeWins=0; final upgradeHistory=<String>[];
  int tab=0,xp=0,opened=0,serial=0,soldCredits=0; double balance=100;
- bool opening=false; Skin? lastDrop; CaseInfo selected=caseList.first;
+ bool opening=false; Skin? lastDrop; OwnedSkin? lastOwnedDrop; CaseInfo selected=caseList.first;
  final ScrollController _rollerController=ScrollController();
  final GlobalKey _rollerViewportKey=GlobalKey();
  List<Skin> rollItems=[]; int? rollWinnerIndex;
@@ -121,7 +121,7 @@ class _GameShellState extends State<GameShell> {
   }
   if(!mounted)return;
   setState((){
-   opening=false;lastDrop=drop;inventory.insert(0,OwnedSkin(drop,++serial));if(ownedCase!=null)caseInventory.remove(ownedCase);opened++;earnXp(100);
+   opening=false;lastDrop=drop;final ownedDrop=OwnedSkin(drop,++serial);inventory.insert(0,ownedDrop);lastOwnedDrop=ownedDrop;if(ownedCase!=null)caseInventory.remove(ownedCase);opened++;earnXp(100);
    for(final m in missions.where((m)=>m.title=='First drop'||m.title=='Collector')){m.progress++;}
    status='You got ${drop.name}!';
   });
@@ -245,6 +245,7 @@ class _GameShellState extends State<GameShell> {
    if(rollItems.isNotEmpty) openingRoller() else Container(width:90,height:90,decoration:BoxDecoration(shape:BoxShape.circle,color:(lastDrop?.color??selected.color).withValues(alpha:.12),border:Border.all(color:(lastDrop?.color??selected.color).withValues(alpha:.6),width:2)),child:Icon(opening?Icons.hourglass_top:(lastDrop?.icon??selected.icon),size:42,color:lastDrop?.color??selected.color)),
    const SizedBox(height:12),Text(lastDrop?.name??selected.name,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:20)),Text(lastDrop?.weapon??selected.subtitle,style:const TextStyle(color:muted,fontSize:12)),
    if(lastDrop!=null)Padding(padding:const EdgeInsets.only(top:6),child:Text('${lastDrop!.rarity} · ${lastDrop!.value.toStringAsFixed(2)}',style:TextStyle(color:lastDrop!.color,fontWeight:FontWeight.bold))),
+   if(lastOwnedDrop!=null&&inventory.contains(lastOwnedDrop))Padding(padding:const EdgeInsets.only(top:8),child:OutlinedButton.icon(onPressed:opening?null:()=>sell(lastOwnedDrop!),icon:const Icon(Icons.sell_outlined),label:Text('SELL NOW · ${lastDrop!.value.toStringAsFixed(2)} CREDITS'))),
    const SizedBox(height:8),Text(status,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:12)),const SizedBox(height:14),
    SizedBox(width:double.infinity,height:50,child:FilledButton.icon(onPressed:opening?null:openCase,icon:Icon(opening?Icons.hourglass_empty:Icons.lock_open),label:Text(opening?'OPENING…':'OPEN CASE · ${selected.price.toStringAsFixed(2)}'),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:bg))),
    const SizedBox(height:7),const Text('Simulation only · virtual credits and items',style:TextStyle(color:muted,fontSize:10)),
