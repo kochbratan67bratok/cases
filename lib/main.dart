@@ -261,9 +261,24 @@ class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderSt
               children: [
                 const Icon(Icons.bolt, color: Color(0xFF55D6BE), size: 18),
                 const SizedBox(width: 6),
-                Text('${_inventory.length} ITEMS COLLECTED', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                const Spacer(),
-                const Text('SIMULATION ONLY', style: TextStyle(color: Colors.white38, fontSize: 9, letterSpacing: 0.8)),
+                Expanded(
+                  child: Text(
+                    '${_inventory.length} ITEMS COLLECTED',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Flexible(
+                  child: Text(
+                    'SIMULATION ONLY',
+                    textAlign: TextAlign.end,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white38, fontSize: 9, letterSpacing: 0.5),
+                  ),
+                ),
               ],
             ),
           ],
