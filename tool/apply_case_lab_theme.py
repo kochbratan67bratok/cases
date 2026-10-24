@@ -142,6 +142,7 @@ import '../../data/models/skin_dto.dart';
 import '../../data/repositories/local_data_repository.dart';
 import '../../domain/battle_pass_progress_service.dart';
 import '../../domain/case_odds.dart';
+import '../../domain/dropped_skin.dart';
 
 class BattlePassScreen extends StatefulWidget {
   final LocalDataRepository repository;
@@ -163,6 +164,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
   bool _dailyClaimed = false, _weeklyClaimed = false;
   Set<int> _claimed = <int>{};
   List<SkinDto> _knives = <SkinDto>[];
+  List<SkinDto> _rewardSkins = <SkinDto>[];
 
   int get _level {
     final value = _xp ~/ _xpPerLevel + 1;
@@ -176,6 +178,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
 
   Future<void> _refresh() async {
     final allSkins = await widget.repository.loadSkins();
+    final rewardSkins = allSkins.where((skin) => !skin.isKnife && !skin.isGloves).toList();
     final knives = allSkins.where((skin) => skin.isKnife).toList()
       ..sort((a, b) {
         final model = a.itemDisplayName.compareTo(b.itemDisplayName);
@@ -193,19 +196,21 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
     final weeklyClaimed = await BattlePassProgressService.weeklyClaimed();
     if (!mounted) return;
     setState(() {
-      _knives = knives; _claimed = claimed; _xp = xp; _coins = coins; _tickets = tickets;
+      _knives = knives; _rewardSkins = rewardSkins; _claimed = claimed; _xp = xp; _coins = coins; _tickets = tickets;
       _dailyOpens = dailyOpens; _weeklyOpens = weeklyOpens; _caseInventoryCount = caseInventoryCount;
       _dailyClaimed = dailyClaimed; _weeklyClaimed = weeklyClaimed;
     });
   }
 
   int _coinsForLevel(int n) => n == _maxLevel ? 1500 : 100 + n * 15;
-  int _casesForLevel(int n) => n == _maxLevel ? 1 : n % 10 == 0 ? 2 : n % 5 == 0 ? 1 : 0;
+  int _casesForLevel(int n) => n == _maxLevel ? 0 : n % 10 == 0 ? 2 : n % 5 == 0 ? 1 : 0;
+  int _skinsForLevel(int n) => n == _maxLevel ? 1 : n % 3 == 0 && _casesForLevel(n) == 0 ? 1 : 0;
   String _rewardTitle(int n) {
-    final coins = _coinsForLevel(n), cases = _casesForLevel(n);
-    if (n == _maxLevel) return 'FINAL REWARD · CS2 case + $coins coins';
+    final coins = _coinsForLevel(n), cases = _casesForLevel(n), skins = _skinsForLevel(n);
+    if (n == _maxLevel) return 'FINAL REWARD · RANDOM CS2 KNIFE + $coins coins';
     if (cases == 2) return '2 CS2 cases + $coins coins';
     if (cases == 1) return 'CS2 case + $coins coins';
+    if (skins > 0) return 'CS2 skin reward + $coins coins';
     return '$coins coins';
   }
 
@@ -213,8 +218,9 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
     if (n > _level || _claimed.contains(n)) return;
     try {
       for (var i = 0; i < _casesForLevel(n); i++) { await _awardCase(n); }
+      for (var i = 0; i < _skinsForLevel(n); i++) { await _awardSkin(n); }
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add case: $error')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add reward to inventory: $error')));
       return;
     }
     final coins = _coins + _coinsForLevel(n);
@@ -243,6 +249,18 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
     if (cases.isEmpty) throw StateError('No regular CS2 cases are available.');
     final selected = cases[_random.nextInt(cases.length)];
     await _tracking.recordContainerAward(container: selected, sourceName: 'Operation Pass · Level $level');
+  }
+
+  Future<void> _awardSkin(int level) async {
+    final pool = level == _maxLevel ? _knives : _rewardSkins;
+    if (pool.isEmpty) throw StateError(level == _maxLevel ? 'No CS2 knife finishes are available.' : 'No CS2 weapon skins are available.');
+    final selected = pool[_random.nextInt(pool.length)];
+    await _tracking.recordSkinDrop(
+      drop: DroppedSkin(skin: selected, isStatTrak: false, isSouvenir: false,
+        skinFloat: null, exterior: null, patternSeed: null),
+      sourceName: 'Operation Pass · Level $level',
+      sourceType: 'Battle Pass',
+    );
   }
 
   Future<void> _showAllKnives() async {
@@ -318,7 +336,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
 
   Widget _rewardTile(int n) {
     final unlocked = n <= _level, claimed = _claimed.contains(n);
-    final finalLevel = n == _maxLevel, cases = _casesForLevel(n);
+    final finalLevel = n == _maxLevel, cases = _casesForLevel(n), skins = _skinsForLevel(n);
     final color = finalLevel ? Colors.amber : n >= 50 ? Colors.purpleAccent : n >= 25 ? Colors.lightBlueAccent : const Color(0xFF55D6BE);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -328,11 +346,11 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
         Container(width: 42, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: .13), borderRadius: BorderRadius.circular(10)),
           alignment: Alignment.center, child: Text('$n', style: TextStyle(color: unlocked ? color : Colors.white38, fontWeight: FontWeight.w900))),
         const SizedBox(width: 11),
-        Icon(finalLevel ? Icons.workspace_premium : cases > 0 ? Icons.inventory_2 : Icons.monetization_on, color: unlocked ? color : Colors.white30),
+        Icon(finalLevel ? Icons.workspace_premium : cases > 0 ? Icons.inventory_2 : skins > 0 ? Icons.auto_awesome : Icons.monetization_on, color: unlocked ? color : Colors.white30),
         const SizedBox(width: 9),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(_rewardTitle(n), style: TextStyle(fontWeight: FontWeight.w800, color: finalLevel ? Colors.amber : null, fontSize: 12)),
-          Text(cases > 0 ? 'Case is added to inventory unopened' : 'Coins are added to your balance',
+          Text(cases > 0 ? 'Case is added to inventory unopened' : skins > 0 ? 'Skin is added to inventory · never sold automatically' : 'Coins are added to your balance',
             style: const TextStyle(color: Colors.white54, fontSize: 10)),
         ])),
         if (claimed) const Icon(Icons.check_circle, color: Color(0xFF55D6BE))
