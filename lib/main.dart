@@ -163,8 +163,8 @@ class _GameShellState extends State<GameShell> {
   backgroundColor:bg,
   body:Stack(children:[
    const Positioned.fill(child:DecoratedBox(decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFF080B12),Color(0xFF111927),Color(0xFF0A0E15)])))),
-   Positioned(top:-140,right:-90,child:IgnorePointer(child(Container(width:340,height:340,decoration:BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[mint.withValues(alpha:.16),mint.withValues(alpha:.035),Colors.transparent])))))),
-   Positioned(bottom:40,left:-160,child:IgnorePointer(child(Container(width:360,height:360,decoration:BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[const Color(0xFF5D54D9).withValues(alpha:.15),const Color(0xFF5D54D9).withValues(alpha:.035),Colors.transparent])))))),
+   Positioned(top:-140,right:-90,child:IgnorePointer(child:Container(width:340,height:340,decoration:BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[mint.withValues(alpha:.16),mint.withValues(alpha:.035),Colors.transparent])))))),
+   Positioned(bottom:40,left:-160,child:IgnorePointer(child:Container(width:360,height:360,decoration:BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[const Color(0xFF5D54D9).withValues(alpha:.15),const Color(0xFF5D54D9).withValues(alpha:.035),Colors.transparent])))))),
    SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),upgradePage(),duelPage(),missionPage(),inventoryPage(),profilePage()])),
   ]),
   bottomNavigationBar:NavigationBar(elevation:0,selectedIndex:tab,onDestinationSelected:(i)=>setState(()=>tab=i),backgroundColor:const Color(0xF20D121B),indicatorColor:mint.withValues(alpha:.18),destinations:const[
