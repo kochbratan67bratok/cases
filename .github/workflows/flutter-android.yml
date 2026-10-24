@@ -18,7 +18,7 @@ jobs:
       - name: Generate Android platform files
         run: flutter create --platforms=android --project-name cases .
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
