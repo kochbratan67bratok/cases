@@ -58,6 +58,23 @@ class _GameShellState extends State<GameShell> {
   Mission('Season grinder','Earn 500 season XP',500,250,Icons.bolt),
  ];
  final claimedLevels=<int>{};
+ Skin? level67Knife;
+ String? level67KnifeTier;
+ static const knifeOdds=[7000,2000,800,180,20];
+ static const knifeTierNames=['BUDGET KNIFE','MID-TIER KNIFE','PREMIUM KNIFE','HIGH-TIER KNIFE','ULTRA RARE KNIFE'];
+ static const knifeTierChances=['70.00%','20.00%','8.00%','1.80%','0.20%'];
+ static const knifePool=[
+  [Skin('Rust Coat','Shadow Daggers','Knife · Budget',45,Color(0xFF5E98D9),Icons.content_cut),Skin('Safari Mesh','Navaja Knife','Knife · Budget',48,Color(0xFF5E98D9),Icons.content_cut),Skin('Forest DDPAT','Kukri Knife','Knife · Budget',52,Color(0xFF5E98D9),Icons.content_cut),Skin('Boreal Forest','Gut Knife','Knife · Budget',58,Color(0xFF5E98D9),Icons.content_cut)],
+  [Skin('Rust Coat','Falchion Knife','Knife · Mid-tier',90,Color(0xFF4B69FF),Icons.content_cut),Skin('Safari Mesh','Huntsman Knife','Knife · Mid-tier',115,Color(0xFF4B69FF),Icons.content_cut),Skin('Urban Masked','Nomad Knife','Knife · Mid-tier',145,Color(0xFF4B69FF),Icons.content_cut)],
+  [Skin('Stained','Flip Knife','Knife · Premium',260,Color(0xFF8847FF),Icons.content_cut),Skin('Blue Steel','Stiletto Knife','Knife · Premium',320,Color(0xFF8847FF),Icons.content_cut),Skin('Slaughter','Skeleton Knife','Knife · Premium',390,Color(0xFF8847FF),Icons.content_cut)],
+  [Skin('Doppler','Talon Knife','Knife · High-tier',900,Color(0xFFD32CE6),Icons.content_cut),Skin('Fade','M9 Bayonet','Knife · High-tier',1250,Color(0xFFD32CE6),Icons.content_cut),Skin('Tiger Tooth','Karambit','Knife · High-tier',1600,Color(0xFFD32CE6),Icons.content_cut)],
+  [Skin('Fade','Butterfly Knife','Knife · Ultra rare',5000,Color(0xFFFFD700),Icons.star),Skin('Sapphire Doppler','Karambit','Knife · Ultra rare',7500,Color(0xFFFFD700),Icons.star)]
+ ];
+ Skin rollLevel67Knife(){
+  var ticket=random.nextInt(10000),tier=0;
+  for(var i=0;i<knifeOdds.length;i++){if(ticket<knifeOdds[i]){tier=i;break;}ticket-=knifeOdds[i];}
+  return knifePool[tier][random.nextInt(knifePool[tier].length)];
+ }
  int duelRounds=3,duelCount=0,duelWins=0; bool duelRunning=false; List<Skin> duelPlayerDrops=[],duelBotDrops=[]; String duelResult='Create a duel against the bot.';
  OwnedSkin? upgradeSource; Skin? upgradeTarget; int upgradeAttempts=0,upgradeWins=0; final upgradeHistory=<String>[];
  int tab=0,xp=0,opened=0,serial=0,soldCredits=0; double balance=100;
@@ -158,7 +175,22 @@ class _GameShellState extends State<GameShell> {
   status='Sold ${item.skin.name} for ${item.skin.value.toStringAsFixed(2)}';
  });}
  void claimMission(Mission m){if(!m.complete||m.claimed)return;setState(() { m.claimed=true; balance+=m.reward; });}
- void claimLevel(int n){if(n>level||claimedLevels.contains(n))return;setState(() { claimedLevels.add(n); balance+=50+n*10; });}
+ void claimLevel(int n){
+  if(n>level||n<1||n>67||claimedLevels.contains(n))return;
+  setState((){
+   claimedLevels.add(n);
+   if(n==67){
+    level67Knife=rollLevel67Knife();
+    final knife=level67Knife!;
+    level67KnifeTier=knife.rarity;
+    inventory.insert(0,OwnedSkin(knife,++serial));
+    status='LEVEL 67 DROP: ${knife.weapon} | ${knife.name}';
+   }else{
+    balance+=50+n*10;
+    if(n%5==0)balance+=75;
+   }
+  });
+ }
  @override Widget build(BuildContext context)=>Scaffold(
   backgroundColor:bg,
   body:Stack(children:[
@@ -215,18 +247,44 @@ class _GameShellState extends State<GameShell> {
    Row(children:[Container(width:52,height:52,decoration:BoxDecoration(color:mint.withValues(alpha:.14),borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.military_tech,color:mint,size:31)),const SizedBox(width:12),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('OPERATION NIGHTFALL',style:TextStyle(fontWeight:FontWeight.w900,fontSize:16)),Text('Free reward track',style:TextStyle(color:muted,fontSize:12))]))]),
    const SizedBox(height:18),xpBar(),const SizedBox(height:8),const Text('Earn XP from case openings and missions. Claim unlocked rewards below.',style:TextStyle(color:muted,fontSize:11)),
   ]),padding:const EdgeInsets.all(20)),
-  heading('Reward track',trailing:'10 LEVELS'),
-  ...List.generate(10,(i){
-   final n=i+1;final unlocked=n<=level;final claimed=claimedLevels.contains(n);
-   const names=['Credit bundle','Sticker capsule','Mil-Spec drop','Credit bundle','Case token','Classified drop','Rare charm','Credit bundle','Premium case','Knife token'];
-   final icons=[Icons.monetization_on,Icons.stars,Icons.inventory_2,Icons.monetization_on,Icons.confirmation_number,Icons.auto_awesome,Icons.diamond,Icons.monetization_on,Icons.card_giftcard,Icons.workspace_premium];
-   return Padding(padding:const EdgeInsets.only(bottom:9),child:box(Row(children:[
-    Container(width:42,height:46,decoration:BoxDecoration(color:unlocked?mint.withValues(alpha:.14):Colors.white.withValues(alpha:.04),borderRadius:BorderRadius.circular(12)),child:Center(child:Text('$n',style:TextStyle(fontWeight:FontWeight.w900,color:unlocked?mint:muted)))),
-    const SizedBox(width:11),Icon(icons[i],color:unlocked?mint:muted),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(names[i],style:const TextStyle(fontWeight:FontWeight.bold)),Text('Level $n reward',style:const TextStyle(color:muted,fontSize:11))])),
-    if(claimed)const Icon(Icons.check_circle,color:mint) else if(unlocked)TextButton(onPressed:()=>claimLevel(n),child:const Text('CLAIM')) else const Icon(Icons.lock_outline,color:muted),
-   ]),padding:const EdgeInsets.all(12)));
+  heading('Reward track',trailing:'67 LEVELS'),
+  box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   const Text('LEVEL 67 · RANDOM KNIFE DROP',style:TextStyle(fontWeight:FontWeight.w900,color:Color(0xFFFFD700),letterSpacing:.5)),
+   const SizedBox(height:5),
+   const Text('Reach level 67 and claim once. The knife is selected randomly using the published odds below.',style:TextStyle(color:muted,fontSize:11)),
+   if(level67Knife!=null)Padding(padding:const EdgeInsets.only(top:12),child:Row(children:[
+    Icon(level67Knife!.icon,color:level67Knife!.color,size:34),const SizedBox(width:10),
+    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('${level67Knife!.weapon} | ${level67Knife!.name}',style:TextStyle(color:level67Knife!.color,fontWeight:FontWeight.w900)),Text('Added to inventory · ${level67Knife!.value.toStringAsFixed(0)} credits (simulated value)',style:const TextStyle(color:muted,fontSize:10))])),
+    const Icon(Icons.check_circle,color:mint),
+   ])),
+   const SizedBox(height:12),
+   ...List.generate(knifeTierNames.length,(i)=>Padding(padding:const EdgeInsets.symmetric(vertical:4),child:Row(children:[
+    Expanded(child:Text(knifeTierNames[i],style:TextStyle(fontSize:10,fontWeight:FontWeight.w800,color:[const Color(0xFF5E98D9),const Color(0xFF4B69FF),const Color(0xFF8847FF),const Color(0xFFD32CE6),const Color(0xFFFFD700)][i]))),
+    Text(knifeTierChances[i],style:const TextStyle(fontWeight:FontWeight.w900,fontSize:11)),
+   ]))),
+  ]),padding:const EdgeInsets.all(16)),
+  ...List.generate(67,(i){
+   final n=i+1,unlocked=n<=level,claimed=claimedLevels.contains(n);
+   final isKnife=n==67;
+   final names=['Credit bundle','Sticker capsule','Case token','XP boost','Mil-Spec drop','Credit bundle','Charm capsule','Case token','Restricted drop','Season bonus','Sticker bundle','XP boost','Classified drop','Credit bundle','Rare charm','Case token','Covert drop','Credit bundle','Case token','Milestone bonus'];
+   final icons=[Icons.monetization_on,Icons.stars,Icons.inventory_2,Icons.bolt,Icons.auto_awesome,Icons.monetization_on,Icons.diamond,Icons.confirmation_number,Icons.card_giftcard,Icons.workspace_premium];
+   final rewardName=isKnife?'RANDOM KNIFE DROP':names[i%names.length];
+   final color=isKnife?const Color(0xFFFFD700):n>=50?const Color(0xFFD32CE6):n>=30?const Color(0xFF4B69FF):mint;
+   return Padding(padding:const EdgeInsets.only(bottom:8),child:box(Row(children:[
+    Container(width:42,height:44,decoration:BoxDecoration(color:unlocked?color.withValues(alpha:.15):Colors.white.withValues(alpha:.04),borderRadius:BorderRadius.circular(11)),child:Center(child:Text('$n',style:TextStyle(fontWeight:FontWeight.w900,color:unlocked?color:muted)))),
+    const SizedBox(width:10),
+    Icon(isKnife?Icons.star:icons[(i%icons.length)],color:unlocked?color:muted),
+    const SizedBox(width:9),
+    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     Text(rewardName,style:TextStyle(fontWeight:FontWeight.w900,color:isKnife?color:null,fontSize:11)),
+     Text(isKnife?'One random knife · odds shown above':'Level $n · ${n%5==0?'milestone reward':'free reward'}',style:const TextStyle(color:muted,fontSize:10)),
+    ])),
+    if(claimed)const Icon(Icons.check_circle,color:mint)
+    else if(unlocked)TextButton(onPressed:()=>claimLevel(n),child:Text(isKnife?'OPEN':'CLAIM',style:TextStyle(color:isKnife?const Color(0xFFFFD700):mint,fontWeight:FontWeight.w900)))
+    else const Icon(Icons.lock_outline,color:muted),
+   ]),padding:const EdgeInsets.all(11)));
   }),
-  box(const Text('Demo season: progress is stored locally in memory and resets when the app restarts. Cloud saves and a real-time season timer are not connected.',style:TextStyle(color:muted,fontSize:11))),
+  box(const Text('All 67 levels are free. Level 67 grants one random knife with published odds. Knife names and values are simulated; no real-money items or market trades are connected. Progress currently resets when the app restarts.',style:TextStyle(color:muted,fontSize:11))),
  ]);
 
  void doUpgrade(){
