@@ -42,6 +42,7 @@ const caseList=<CaseInfo>[
  CaseInfo('Dreams & Nightmares',18,'Pick your side',Color(0xFF43A6E8),Icons.dark_mode),
 ];
 class OwnedSkin { OwnedSkin(this.skin,this.id); final Skin skin; final int id; }
+class OwnedCase { OwnedCase(this.caseInfo,this.id); final CaseInfo caseInfo; final int id; }
 class Mission {
  Mission(this.title,this.desc,this.goal,this.reward,this.icon);
  final String title,desc; final int goal,reward; final IconData icon;
@@ -50,7 +51,7 @@ class Mission {
 }
 class GameShell extends StatefulWidget { const GameShell({super.key}); @override State<GameShell> createState()=>_GameShellState(); }
 class _GameShellState extends State<GameShell> {
- final random=Random(); final inventory=<OwnedSkin>[];
+ final random=Random(); final inventory=<OwnedSkin>[]; final caseInventory=<OwnedCase>[]; int inventoryFilter=0;
  late final missions=<Mission>[
   Mission('First drop','Open 1 case',1,80,Icons.inventory_2),
   Mission('Collector','Open 3 cases',3,180,Icons.collections),
@@ -93,14 +94,15 @@ class _GameShellState extends State<GameShell> {
   final pool=skins.where((s)=>s.rarity==rarity).toList();
   return pool[random.nextInt(pool.length)];
  }
- Future<void> openCase() async {
+ Future<void> openCase({OwnedCase? ownedCase}) async {
   if(opening)return;
-  if(balance<selected.price){setState(()=>status='Not enough virtual credits. Sell a skin first.');return;}
+  if(ownedCase!=null){selected=ownedCase.caseInfo;}
+  if(ownedCase==null&&balance<selected.price){setState(()=>status='Not enough virtual credits. Sell a skin first.');return;}
   final drop=roll();
   final sequence=List<Skin>.generate(38,(_)=>roll());
   sequence[_winnerSlot]=drop;
   setState(() {
-   opening=true; balance-=selected.price; lastDrop=null;
+   opening=true; if(ownedCase==null)balance-=selected.price; lastDrop=null;
    rollItems=sequence; rollWinnerIndex=_winnerSlot;
    status='Opening ${selected.name}…';
   });
@@ -119,7 +121,7 @@ class _GameShellState extends State<GameShell> {
   }
   if(!mounted)return;
   setState((){
-   opening=false;lastDrop=drop;inventory.insert(0,OwnedSkin(drop,++serial));opened++;earnXp(100);
+   opening=false;lastDrop=drop;inventory.insert(0,OwnedSkin(drop,++serial));if(ownedCase!=null)caseInventory.remove(ownedCase);opened++;earnXp(100);
    for(final m in missions.where((m)=>m.title=='First drop'||m.title=='Collector')){m.progress++;}
    status='You got ${drop.name}!';
   });
@@ -184,10 +186,19 @@ class _GameShellState extends State<GameShell> {
     final knife=level67Knife!;
     level67KnifeTier=knife.rarity;
     inventory.insert(0,OwnedSkin(knife,++serial));
-    status='LEVEL 67 DROP: ${knife.weapon} | ${knife.name}';
+    status='LEVEL 67 DROP: ${knife.weapon} | ${knife.name} added to inventory';
+   }else if(n%5==1){
+    final reward=50+n*10;
+    balance+=reward;
+    status='LEVEL $n reward: +$reward virtual credits';
+   }else if(n%3==0){
+    final rewardCase=caseList[(n~/3)%caseList.length];
+    caseInventory.insert(0,OwnedCase(rewardCase,++serial));
+    status='LEVEL $n reward: ${rewardCase.name} added to inventory';
    }else{
-    balance+=50+n*10;
-    if(n%5==0)balance+=75;
+    final rewardSkin=skins[(n*7)%skins.length];
+    inventory.insert(0,OwnedSkin(rewardSkin,++serial));
+    status='LEVEL $n reward: ${rewardSkin.weapon} | ${rewardSkin.name} added to inventory';
    }
   });
  }
@@ -265,26 +276,25 @@ class _GameShellState extends State<GameShell> {
   ]),padding:const EdgeInsets.all(16)),
   ...List.generate(67,(i){
    final n=i+1,unlocked=n<=level,claimed=claimedLevels.contains(n);
-   final isKnife=n==67;
-   final names=['Credit bundle','Sticker capsule','Case token','XP boost','Mil-Spec drop','Credit bundle','Charm capsule','Case token','Restricted drop','Season bonus','Sticker bundle','XP boost','Classified drop','Credit bundle','Rare charm','Case token','Covert drop','Credit bundle','Case token','Milestone bonus'];
-   final icons=[Icons.monetization_on,Icons.stars,Icons.inventory_2,Icons.bolt,Icons.auto_awesome,Icons.monetization_on,Icons.diamond,Icons.confirmation_number,Icons.card_giftcard,Icons.workspace_premium];
-   final rewardName=isKnife?'RANDOM KNIFE DROP':names[i%names.length];
+   final isKnife=n==67, isCoins=!isKnife&&n%5==1, isCase=!isKnife&&!isCoins&&n%3==0;
+   final rewardName=isKnife?'RANDOM KNIFE DROP':isCoins?'COIN REWARD':isCase?'CASE · ${caseList[(n~/3)%caseList.length].name}':'SKIN REWARD';
+   final rewardIcon=isKnife?Icons.star:isCoins?Icons.monetization_on:isCase?Icons.inventory_2:Icons.auto_awesome;
    final color=isKnife?const Color(0xFFFFD700):n>=50?const Color(0xFFD32CE6):n>=30?const Color(0xFF4B69FF):mint;
    return Padding(padding:const EdgeInsets.only(bottom:8),child:box(Row(children:[
     Container(width:42,height:44,decoration:BoxDecoration(color:unlocked?color.withValues(alpha:.15):Colors.white.withValues(alpha:.04),borderRadius:BorderRadius.circular(11)),child:Center(child:Text('$n',style:TextStyle(fontWeight:FontWeight.w900,color:unlocked?color:muted)))),
     const SizedBox(width:10),
-    Icon(isKnife?Icons.star:icons[(i%icons.length)],color:unlocked?color:muted),
+    Icon(rewardIcon,color:unlocked?color:muted),
     const SizedBox(width:9),
     Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
      Text(rewardName,style:TextStyle(fontWeight:FontWeight.w900,color:isKnife?color:null,fontSize:11)),
-     Text(isKnife?'One random knife · odds shown above':'Level $n · ${n%5==0?'milestone reward':'free reward'}',style:const TextStyle(color:muted,fontSize:10)),
+     Text(isKnife?'Added to inventory · rare knife odds shown above':isCoins?'Virtual credits go to balance':isCase?'Case goes to inventory unopened':'Skin goes to inventory · sell any time',style:const TextStyle(color:muted,fontSize:10)),
     ])),
     if(claimed)const Icon(Icons.check_circle,color:mint)
     else if(unlocked)TextButton(onPressed:()=>claimLevel(n),child:Text(isKnife?'OPEN':'CLAIM',style:TextStyle(color:isKnife?const Color(0xFFFFD700):mint,fontWeight:FontWeight.w900)))
     else const Icon(Icons.lock_outline,color:muted),
    ]),padding:const EdgeInsets.all(11)));
   }),
-  box(const Text('All 67 levels are free. Level 67 grants one random knife with published odds. Knife names and values are simulated; no real-money items or market trades are connected. Progress currently resets when the app restarts.',style:TextStyle(color:muted,fontSize:11))),
+  box(const Text('All 67 levels are free. Cases and skins are added to inventory and are never opened or sold automatically. Only coin rewards go directly to your virtual-credit balance. Level 67 adds a random knife to inventory. Progress currently resets when the app restarts.',style:TextStyle(color:muted,fontSize:11))),
  ]);
 
  void doUpgrade(){
@@ -385,13 +395,36 @@ class _GameShellState extends State<GameShell> {
   ])))),
   box(const Text('Daily reset is not connected yet; mission progress is a local demo.',style:TextStyle(color:muted,fontSize:11))),
  ]);
- Widget inventoryPage()=>shell('INVENTORY','${inventory.length} ITEMS · SELL SKINS FOR CREDITS',[
-  if(inventory.isEmpty)box(const Column(children:[Icon(Icons.inventory_2_outlined,size:45,color:muted),SizedBox(height:9),Text('Your inventory is empty',style:TextStyle(fontWeight:FontWeight.bold)),SizedBox(height:4),Text('Open a case to collect your first skin.',style:TextStyle(color:muted,fontSize:12))]))
-  else ...[
+ Widget inventoryPage()=>shell('INVENTORY','${caseInventory.length} CASES · ${inventory.length} SKINS',[
+  box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Row(children:[Expanded(child:Text('ITEMS IN INVENTORY',style:TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.bold))),Text('${caseInventory.length+inventory.length}',style:const TextStyle(color:mint,fontSize:18,fontWeight:FontWeight.w900))]),
+   const SizedBox(height:10),
+   SegmentedButton<int>(segments:const[
+    ButtonSegment(value:0,label:Text('ALL'),icon:Icon(Icons.grid_view)),
+    ButtonSegment(value:1,label:Text('CASES'),icon:Icon(Icons.inventory_2)),
+    ButtonSegment(value:2,label:Text('SKINS'),icon:Icon(Icons.auto_awesome)),
+   ],selected:{inventoryFilter},onSelectionChanged:(value)=>setState(()=>inventoryFilter=value.first)),
+  ]),padding:const EdgeInsets.all(14)),
+  if((inventoryFilter==0||inventoryFilter==1)&&caseInventory.isNotEmpty)...[
+   heading('CASES',trailing:'${caseInventory.length}'),
+   ...caseInventory.map((item)=>Padding(padding:const EdgeInsets.only(bottom:9),child:box(Row(children:[
+    Container(width:54,height:54,decoration:BoxDecoration(color:item.caseInfo.color.withValues(alpha:.15),borderRadius:BorderRadius.circular(12)),child:Icon(item.caseInfo.icon,color:item.caseInfo.color,size:30)),
+    const SizedBox(width:11),
+    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     Text(item.caseInfo.name,style:const TextStyle(fontWeight:FontWeight.bold)),
+     Text('Unopened case · ${item.caseInfo.price.toStringAsFixed(2)} credits',style:const TextStyle(color:muted,fontSize:10)),
+    ])),
+    FilledButton(onPressed:opening?null:()=>openCase(ownedCase:item),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:bg),child:const Text('OPEN')),
+   ]),padding:const EdgeInsets.all(12)))),
+  ],
+  if((inventoryFilter==0||inventoryFilter==2)&&inventory.isNotEmpty)...[
+   heading('SKINS',trailing:'${inventory.length}'),
    box(Row(children:[const Expanded(child:Text('COLLECTION VALUE',style:TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.bold))),Text('${inventory.fold<double>(0,(sum,item)=>sum+item.skin.value).toStringAsFixed(2)}',style:const TextStyle(color:mint,fontWeight:FontWeight.w900,fontSize:18))])),
    const SizedBox(height:10),
    ...inventory.map((item)=>Padding(padding:const EdgeInsets.only(bottom:9),child:box(Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:item.skin.color.withValues(alpha:.12),borderRadius:BorderRadius.circular(12)),child:Icon(item.skin.icon,color:item.skin.color,size:26)),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(item.skin.name,style:const TextStyle(fontWeight:FontWeight.bold)),Text('${item.skin.weapon} · ${item.skin.rarity}',style:const TextStyle(color:muted,fontSize:10)),Text('${item.skin.value.toStringAsFixed(2)}',style:TextStyle(color:item.skin.color,fontWeight:FontWeight.bold))])),TextButton(onPressed:()=>sell(item),child:const Text('SELL'))]),padding:const EdgeInsets.all(12)))),
   ],
+  if(caseInventory.isEmpty&&inventory.isEmpty)box(const Column(children:[Icon(Icons.inventory_2_outlined,size:45,color:muted),SizedBox(height:9),Text('Your inventory is empty',style:TextStyle(fontWeight:FontWeight.bold)),SizedBox(height:4),Text('Claim a Battle Pass reward or open a case to collect your first item.',style:TextStyle(color:muted,fontSize:12))])),
+  if((inventoryFilter==1&&caseInventory.isEmpty)||(inventoryFilter==2&&inventory.isEmpty))box(Text(inventoryFilter==1?'No cases yet. Claim a case reward in the Battle Pass.':'No skins yet. Open a case or claim a skin reward.',style:const TextStyle(color:muted,fontSize:12))),
  ]);
  Widget stat(IconData icon,String value,String label,Color color)=>box(Row(children:[Icon(icon,color:color,size:24),const SizedBox(width:9),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(value,style:const TextStyle(fontWeight:FontWeight.w900)),Text(label,style:const TextStyle(color:muted,fontSize:10))]))]),padding:const EdgeInsets.all(13));
  Widget profilePage()=>shell('PLAYER PROFILE','YOUR CAREER SUMMARY',[
