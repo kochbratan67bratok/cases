@@ -10,7 +10,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const CaseSimulatorApp());
     expect(find.text('CASE LAB'), findsOneWidget);
-    expect(find.text('SELECT A CASE'), findsOneWidget);
+    expect(find.text('CHOOSE A CASE'), findsOneWidget);
     expect(find.textContaining('OPEN CASE'), findsOneWidget);
   });
 }

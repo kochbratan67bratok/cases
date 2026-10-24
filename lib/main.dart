@@ -174,7 +174,7 @@ class _GameShellState extends State<GameShell> {
   heading('1 · Your item',trailing:'INVENTORY'),
   if(inventory.isEmpty)box(const Text('Your inventory is empty. Open a case first.',style:TextStyle(color:muted)))
   else box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-   DropdownButtonFormField<OwnedSkin>(value:inventory.contains(upgradeSource)?upgradeSource:null,isExpanded:true,decoration:const InputDecoration(labelText:'Skin to upgrade',border:OutlineInputBorder()),items:inventory.map((item)=>DropdownMenuItem(value:item,child:Text('${item.skin.name} · ${item.skin.value.toStringAsFixed(2)}',overflow:TextOverflow.ellipsis))).toList(),onChanged:(item)=>setState(()=>{upgradeSource=item,upgradeTarget=null})),
+   DropdownButtonFormField<OwnedSkin>(value:inventory.contains(upgradeSource)?upgradeSource:null,isExpanded:true,decoration:const InputDecoration(labelText:'Skin to upgrade',border:OutlineInputBorder()),items:inventory.map((item)=>DropdownMenuItem(value:item,child:Text('${item.skin.name} · ${item.skin.value.toStringAsFixed(2)}',overflow:TextOverflow.ellipsis))).toList(),onChanged:(item)=>setState(() { upgradeSource=item; upgradeTarget=null; })),
    if(upgradeSource!=null)Padding(padding:const EdgeInsets.only(top:10),child:Text('Stake value: ${upgradeSource!.skin.value.toStringAsFixed(2)}',style:const TextStyle(color:mint,fontWeight:FontWeight.bold))),
   ])),
   heading('2 · Target skin',trailing:'HIGHER VALUE'),
