@@ -160,8 +160,14 @@ class _GameShellState extends State<GameShell> {
  void claimMission(Mission m){if(!m.complete||m.claimed)return;setState(() { m.claimed=true; balance+=m.reward; });}
  void claimLevel(int n){if(n>level||claimedLevels.contains(n))return;setState(() { claimedLevels.add(n); balance+=50+n*10; });}
  @override Widget build(BuildContext context)=>Scaffold(
-  body:SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),upgradePage(),duelPage(),missionPage(),inventoryPage(),profilePage()])),
-  bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(i)=>setState(()=>tab=i),backgroundColor:const Color(0xFF171C27),indicatorColor:mint.withValues(alpha:.18),destinations:const[
+  backgroundColor:bg,
+  body:Stack(children:[
+   const Positioned.fill(child:DecoratedBox(decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFF080B12),Color(0xFF111927),Color(0xFF0A0E15)])))),
+   Positioned(top:-140,right:-90,child:IgnorePointer(child(Container(width:340,height:340,decoration:BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[mint.withValues(alpha:.16),mint.withValues(alpha:.035),Colors.transparent])))))),
+   Positioned(bottom:40,left:-160,child:IgnorePointer(child(Container(width:360,height:360,decoration:BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[const Color(0xFF5D54D9).withValues(alpha:.15),const Color(0xFF5D54D9).withValues(alpha:.035),Colors.transparent])))))),
+   SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),upgradePage(),duelPage(),missionPage(),inventoryPage(),profilePage()])),
+  ]),
+  bottomNavigationBar:NavigationBar(elevation:0,selectedIndex:tab,onDestinationSelected:(i)=>setState(()=>tab=i),backgroundColor:const Color(0xF20D121B),indicatorColor:mint.withValues(alpha:.18),destinations:const[
    NavigationDestination(icon:Icon(Icons.inventory_2_outlined),selectedIcon:Icon(Icons.inventory_2),label:'Cases'),
    NavigationDestination(icon:Icon(Icons.military_tech_outlined),selectedIcon:Icon(Icons.military_tech),label:'Season'),
    NavigationDestination(icon:Icon(Icons.auto_fix_high_outlined),selectedIcon:Icon(Icons.auto_fix_high),label:'Upgrade'),
@@ -178,7 +184,7 @@ class _GameShellState extends State<GameShell> {
   ]))),
   SliverPadding(padding:const EdgeInsets.fromLTRB(16,8,16,26),sliver:SliverList(delegate:SliverChildListDelegate(children))),
  ]);
- Widget box(Widget child,{EdgeInsets padding=const EdgeInsets.all(16)})=>Container(padding:padding,decoration:BoxDecoration(color:panel,borderRadius:BorderRadius.circular(20),border:Border.all(color:Colors.white.withValues(alpha:.06))),child:child);
+ Widget box(Widget child,{EdgeInsets padding=const EdgeInsets.all(16)})=>Container(padding:padding,decoration:BoxDecoration(gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xEE202A39),Color(0xE9151B26)]),borderRadius:BorderRadius.circular(20),border:Border.all(color:Colors.white.withValues(alpha:.075)),boxShadow:const [BoxShadow(color:Color(0x22000000),blurRadius:18,offset:Offset(0,8))]),child:child);
  Widget heading(String text,{String? trailing})=>Padding(padding:const EdgeInsets.only(top:20,bottom:12),child:Row(children:[Expanded(child:Text(text.toUpperCase(),style:const TextStyle(fontSize:12,fontWeight:FontWeight.w900,letterSpacing:1.2))),if(trailing!=null)Text(trailing,style:const TextStyle(color:mint,fontWeight:FontWeight.bold,fontSize:11))]));
  Widget xpBar()=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
   Row(children:[Expanded(child:Text('LEVEL $level',style:const TextStyle(fontWeight:FontWeight.w900))),Text('$xp XP',style:const TextStyle(color:mint,fontWeight:FontWeight.bold,fontSize:11))]),
@@ -189,7 +195,7 @@ class _GameShellState extends State<GameShell> {
   box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('YOUR NEXT\nBIG DROP?',style:TextStyle(fontSize:30,height:1.04,fontWeight:FontWeight.w900)),const SizedBox(height:9),const Text('Open cases, collect skins and climb the season track.',style:TextStyle(color:muted)),const SizedBox(height:16),xpBar()] ),padding:const EdgeInsets.all(20)),
   heading('Choose a case',trailing:'${caseList.length} CASES'),
   SizedBox(height:155,child:ListView.separated(scrollDirection:Axis.horizontal,itemCount:caseList.length,separatorBuilder:(_,__)=>const SizedBox(width:10),itemBuilder:(context,i){
-   final c=caseList[i];return GestureDetector(onTap:opening?null:()=>setState(() { selected=c; lastDrop=null; rollItems=[]; rollWinnerIndex=null; status='Ready to open ${c.name}'; }),child:Container(width:155,padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:selected==c?c.color.withValues(alpha:.16):panel,borderRadius:BorderRadius.circular(18),border:Border.all(color:selected==c?c.color:Colors.white10)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(c.icon,size:29,color:c.color),const Spacer(),Text(c.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(c.subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10)),const SizedBox(height:5),Text('${c.price.toStringAsFixed(2)}',style:TextStyle(color:c.color,fontWeight:FontWeight.w900))])));
+   final c=caseList[i];return GestureDetector(onTap:opening?null:()=>setState(() { selected=c; lastDrop=null; rollItems=[]; rollWinnerIndex=null; status='Ready to open ${c.name}'; }),child:Container(width:155,padding:const EdgeInsets.all(13),decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:selected==c?[c.color.withValues(alpha:.24),const Color(0xFF151B27)]:[const Color(0xD9212937),const Color(0xD910151F)]),borderRadius:BorderRadius.circular(18),border:Border.all(color:selected==c?c.color.withValues(alpha:.9):Colors.white10),boxShadow:selected==c?[BoxShadow(color:c.color.withValues(alpha:.13),blurRadius:18,offset:const Offset(0,5))]:null),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(c.icon,size:29,color:c.color),const Spacer(),Text(c.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(c.subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10)),const SizedBox(height:5),Text('${c.price.toStringAsFixed(2)}',style:TextStyle(color:c.color,fontWeight:FontWeight.w900))])));
   })),
   const SizedBox(height:14),
   box(Column(children:[
