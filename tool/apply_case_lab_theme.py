@@ -450,9 +450,9 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
         Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('MISSIONS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: .8)),
           const SizedBox(height: 8),
-          _mission('Daily: open 3 cases', _dailyOpens.clamp(0, 3), 3, '+250 XP', _dailyClaimed, _claimDaily),
+          _mission('Daily: open 3 cases', _dailyOpens.clamp(0, 3).toInt(), 3, '+250 XP', _dailyClaimed, _claimDaily),
           const Divider(height: 18),
-          _mission('Weekly: open 10 cases', _weeklyOpens.clamp(0, 10), 10, '+1000 XP', _weeklyClaimed, _claimWeekly),
+          _mission('Weekly: open 10 cases', _weeklyOpens.clamp(0, 10).toInt(), 10, '+1000 XP', _weeklyClaimed, _claimWeekly),
           const SizedBox(height: 6),
           const Text('Any case opened in the simulator counts. Progress is saved on this device.', style: TextStyle(color: Colors.white54, fontSize: 10)),
         ]))),
