@@ -2,469 +2,179 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 void main() => runApp(const CaseSimulatorApp());
+const mint = Color(0xFF55D6BE), bg = Color(0xFF10141D), panel = Color(0xFF1A202C), muted = Color(0xFF9AA5B5);
 
 class CaseSimulatorApp extends StatelessWidget {
   const CaseSimulatorApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Case Lab',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF10141D),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF55D6BE),
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: const CaseHomePage(),
-    );
-  }
+  @override Widget build(BuildContext context) => MaterialApp(
+    title: 'Case Lab', debugShowCheckedModeBanner: false,
+    theme: ThemeData(useMaterial3: true, brightness: Brightness.dark, scaffoldBackgroundColor: bg, colorScheme: ColorScheme.fromSeed(seedColor: mint, brightness: Brightness.dark)),
+    home: const GameShell(),
+  );
 }
-
 class Skin {
-  const Skin(this.name, this.weapon, this.rarity, this.value, this.color, this.icon);
-  final String name;
-  final String weapon;
-  final String rarity;
-  final double value;
-  final Color color;
-  final IconData icon;
+  const Skin(this.name,this.weapon,this.rarity,this.value,this.color,this.icon);
+  final String name,weapon,rarity; final double value; final Color color; final IconData icon;
 }
-
 const skins = <Skin>[
-  Skin('Sand Dune', 'Glock-18', 'Consumer Grade', 0.12, Color(0xFFB0C3D9), Icons.gps_fixed),
-  Skin('Forest Leaves', 'MP7', 'Consumer Grade', 0.18, Color(0xFFB0C3D9), Icons.park),
-  Skin('Carbon Fiber', 'P250', 'Industrial Grade', 0.45, Color(0xFF5E98D9), Icons.grid_4x4),
-  Skin('Oceanic', 'Nova', 'Industrial Grade', 0.62, Color(0xFF5E98D9), Icons.waves),
-  Skin('Neon Rider', 'MAC-10', 'Mil-Spec', 2.40, Color(0xFF4B69FF), Icons.bolt),
-  Skin('Mecha Industries', 'M4A1-S', 'Mil-Spec', 4.80, Color(0xFF4B69FF), Icons.precision_manufacturing),
-  Skin('Redline', 'AK-47', 'Restricted', 8.50, Color(0xFF8847FF), Icons.local_fire_department),
-  Skin('Hyper Beast', 'AWP', 'Restricted', 13.00, Color(0xFF8847FF), Icons.pets),
-  Skin('Printstream', 'Desert Eagle', 'Classified', 27.00, Color(0xFFD32CE6), Icons.auto_awesome),
-  Skin('Vaporwave', 'M4A1-S', 'Classified', 39.00, Color(0xFFD32CE6), Icons.blur_on),
-  Skin('Crimson Web', 'Karambit', 'Covert', 145.00, Color(0xFFEB4B4B), Icons.change_history),
-  Skin('Fade', 'Butterfly Knife', 'Covert', 280.00, Color(0xFFEB4B4B), Icons.air),
-  Skin('Doppler', 'Karambit', 'Rare Special Item', 520.00, Color(0xFFFFD700), Icons.star),
+ Skin('Sand Dune','Glock-18','Consumer',.12,Color(0xFFB0C3D9),Icons.gps_fixed),
+ Skin('Forest Leaves','MP7','Consumer',.18,Color(0xFFB0C3D9),Icons.park),
+ Skin('Carbon Fiber','P250','Industrial',.45,Color(0xFF5E98D9),Icons.grid_4x4),
+ Skin('Oceanic','Nova','Industrial',.62,Color(0xFF5E98D9),Icons.waves),
+ Skin('Neon Rider','MAC-10','Mil-Spec',2.4,Color(0xFF4B69FF),Icons.bolt),
+ Skin('Mecha Industries','M4A1-S','Mil-Spec',4.8,Color(0xFF4B69FF),Icons.precision_manufacturing),
+ Skin('Redline','AK-47','Restricted',8.5,Color(0xFF8847FF),Icons.local_fire_department),
+ Skin('Hyper Beast','AWP','Restricted',13,Color(0xFF8847FF),Icons.pets),
+ Skin('Printstream','Desert Eagle','Classified',27,Color(0xFFD32CE6),Icons.auto_awesome),
+ Skin('Vaporwave','M4A1-S','Classified',39,Color(0xFFD32CE6),Icons.blur_on),
+ Skin('Crimson Web','Karambit','Covert',145,Color(0xFFEB4B4B),Icons.change_history),
+ Skin('Fade','Butterfly Knife','Covert',280,Color(0xFFEB4B4B),Icons.air),
+ Skin('Doppler','Karambit','Rare special',520,Color(0xFFFFD700),Icons.star),
 ];
-
 class CaseInfo {
-  const CaseInfo(this.name, this.price, this.subtitle, this.color);
-  final String name;
-  final String subtitle;
-  final double price;
-  final Color color;
+ const CaseInfo(this.name,this.price,this.subtitle,this.color,this.icon);
+ final String name,subtitle; final double price; final Color color; final IconData icon;
 }
-
-const caseList = <CaseInfo>[
-  CaseInfo('Recoil Case', 4.50, 'A little kick of color', Color(0xFF45A29E)),
-  CaseInfo('Spectrum Case', 8.00, 'Bright skins, big dreams', Color(0xFF7B61FF)),
-  CaseInfo('Shadow Case', 12.00, 'Something rare in the dark', Color(0xFFE29B45)),
+const caseList=<CaseInfo>[
+ CaseInfo('Recoil Case',4.5,'A little kick of color',Color(0xFF45A29E),Icons.bolt),
+ CaseInfo('Spectrum Case',8,'Bright skins, big dreams',Color(0xFF7B61FF),Icons.blur_on),
+ CaseInfo('Shadow Case',12,'Something rare in the dark',Color(0xFFE29B45),Icons.nights_stay),
+ CaseInfo('Dreams & Nightmares',18,'Pick your side',Color(0xFF43A6E8),Icons.dark_mode),
 ];
-
-class OwnedSkin {
-  const OwnedSkin(this.skin, this.id);
-  final Skin skin;
-  final int id;
+class OwnedSkin { OwnedSkin(this.skin,this.id); final Skin skin; final int id; }
+class Mission {
+ Mission(this.title,this.desc,this.goal,this.reward,this.icon);
+ final String title,desc; final int goal,reward; final IconData icon;
+ int progress=0; bool claimed=false;
+ bool get complete=>progress>=goal;
 }
-
-class CaseHomePage extends StatefulWidget {
-  const CaseHomePage({super.key});
-
-  @override
-  State<CaseHomePage> createState() => _CaseHomePageState();
-}
-
-class _CaseHomePageState extends State<CaseHomePage> with SingleTickerProviderStateMixin {
-  final Random _random = Random();
-  final List<OwnedSkin> _inventory = [];
-  late final AnimationController _animation;
-  double _balance = 100;
-  CaseInfo _selected = caseList.first;
-  Skin? _drop;
-  bool _opening = false;
-  int _nextId = 0;
-  String _status = 'Choose a case and try your luck';
-
-  @override
-  void initState() {
-    super.initState();
-    _animation = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
-  }
-
-  @override
-  void dispose() {
-    _animation.dispose();
-    super.dispose();
-  }
-
-  Skin _roll() {
-    final n = _random.nextInt(1000);
-    final rarity = n < 450
-        ? 'Consumer Grade'
-        : n < 700
-            ? 'Industrial Grade'
-            : n < 870
-                ? 'Mil-Spec'
-                : n < 950
-                    ? 'Restricted'
-                    : n < 985
-                        ? 'Classified'
-                        : n < 998
-                            ? 'Covert'
-                            : 'Rare Special Item';
-    final options = skins.where((skin) => skin.rarity == rarity).toList();
-    return options[_random.nextInt(options.length)];
-  }
-
-  Future<void> _openCase() async {
-    if (_opening) return;
-    if (_balance < _selected.price) {
-      setState(() => _status = 'Not enough virtual balance. Sell an item or choose a cheaper case.');
-      return;
-    }
-    setState(() {
-      _opening = true;
-      _balance -= _selected.price;
-      _drop = null;
-      _status = 'Opening ${_selected.name}…';
-    });
-    await _animation.forward(from: 0);
-    final item = _roll();
-    if (!mounted) return;
-    setState(() {
-      _drop = item;
-      _inventory.insert(0, OwnedSkin(item, ++_nextId));
-      _opening = false;
-      _status = 'You got ${item.name}!';
-    });
-  }
-
-  void _sell(OwnedSkin item) {
-    setState(() {
-      _inventory.remove(item);
-      _balance += item.skin.value;
-      _status = 'Sold ${item.skin.name} for ${item.skin.value.toStringAsFixed(2)}';
-    });
-  }
-
-  void _sellAll() {
-    final total = _inventory.fold<double>(0, (sum, item) => sum + item.skin.value);
-    setState(() {
-      _inventory.clear();
-      _balance += total;
-      _status = 'Sold all items for ${total.toStringAsFixed(2)}';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _header()),
-            SliverToBoxAdapter(child: _hero()),
-            SliverToBoxAdapter(child: _caseSelector()),
-            SliverToBoxAdapter(child: _dropPanel()),
-            SliverToBoxAdapter(child: _inventoryTitle()),
-            if (_inventory.isEmpty)
-              SliverToBoxAdapter(child: _emptyInventory())
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.25,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _inventoryCard(_inventory[index]),
-                    childCount: _inventory.length,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _header() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFF55D6BE).withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: const Icon(Icons.all_inbox, color: Color(0xFF55D6BE)),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('CASE LAB', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
-                Text('CS2 CASE SIMULATOR', style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1.2)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            decoration: BoxDecoration(color: const Color(0xFF202735), borderRadius: BorderRadius.circular(12)),
-            child: Row(
-              children: [
-                const Icon(Icons.account_balance_wallet, color: Color(0xFF55D6BE), size: 17),
-                const SizedBox(width: 7),
-                Text('${_balance.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _hero() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF263B48), Color(0xFF19212F), Color(0xFF171B27)],
-          ),
-          border: Border.all(color: const Color(0xFF55D6BE).withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('YOUR NEXT\nBIG DROP?', style: TextStyle(fontSize: 30, height: 1.05, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 10),
-            const Text('Open cases. Collect skins. Build your inventory.', style: TextStyle(color: Colors.white60)),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                const Icon(Icons.bolt, color: Color(0xFF55D6BE), size: 18),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    '${_inventory.length} ITEMS COLLECTED',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Flexible(
-                  child: Text(
-                    'SIMULATION ONLY',
-                    textAlign: TextAlign.end,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.white38, fontSize: 9, letterSpacing: 0.5),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _caseSelector() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('SELECT A CASE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 12)),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 160,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: caseList.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final item = caseList[index];
-                final selected = item == _selected;
-                return GestureDetector(
-                  onTap: _opening ? null : () => setState(() {
-                    _selected = item;
-                    _drop = null;
-                    _status = 'Ready to open ${item.name}';
-                  }),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 160,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: selected ? item.color.withValues(alpha: 0.18) : const Color(0xFF1A202C),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: selected ? item.color : Colors.white10, width: selected ? 1.5 : 1),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.inventory_2_rounded, color: item.color, size: 26),
-                        const SizedBox(height: 5),
-                        Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.white54)),
-                        const SizedBox(height: 5),
-                        Text('${item.price.toStringAsFixed(2)}', style: TextStyle(color: item.color, fontWeight: FontWeight.w900)),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dropPanel() {
-    final color = _drop?.color ?? _selected.color;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-        decoration: BoxDecoration(
-          color: const Color(0xFF181E29),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white10),
-        ),
-        child: Column(
-          children: [
-            ScaleTransition(
-              scale: CurvedAnimation(parent: _animation, curve: Curves.elasticOut),
-              child: Container(
-                width: 112,
-                height: 112,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color.withValues(alpha: 0.12),
-                  border: Border.all(color: color.withValues(alpha: 0.6), width: 2),
-                ),
-                child: Icon(_opening ? Icons.hourglass_top_rounded : (_drop?.icon ?? Icons.inventory_2_rounded), size: 54, color: color),
-              ),
-            ),
-            const SizedBox(height: 15),
-            Text(_drop?.name ?? _selected.name, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
-            const SizedBox(height: 5),
-            Text(_drop?.weapon ?? _selected.subtitle, style: TextStyle(color: _drop?.color ?? Colors.white54, fontSize: 12, fontWeight: FontWeight.w600)),
-            if (_drop != null) ...[
-              const SizedBox(height: 7),
-              Text(_drop!.rarity.toUpperCase(), style: TextStyle(color: _drop!.color, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text('Estimated value: ${_drop!.value.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            ],
-            const SizedBox(height: 13),
-            Text(_status, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton.icon(
-                onPressed: _opening ? null : _openCase,
-                icon: Icon(_opening ? Icons.hourglass_empty : Icons.lock_open_rounded),
-                label: Text(_opening ? 'OPENING…' : 'OPEN CASE  ·  ${_selected.price.toStringAsFixed(2)}'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF55D6BE),
-                  foregroundColor: const Color(0xFF10141D),
-                  textStyle: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.4),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text('Virtual balance only. No real money or real items.', style: TextStyle(fontSize: 10, color: Colors.white38)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _inventoryTitle() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-      child: Row(
-        children: [
-          const Expanded(child: Text('YOUR INVENTORY', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.4, fontSize: 12))),
-          if (_inventory.isNotEmpty)
-            TextButton.icon(onPressed: _sellAll, icon: const Icon(Icons.sell_outlined, size: 16), label: const Text('Sell all')),
-        ],
-      ),
-    );
-  }
-
-  static Widget _emptyInventory() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 30),
-      child: Column(
-        children: [
-          Icon(Icons.inventory_2_outlined, size: 42, color: Colors.white.withValues(alpha: 0.2)),
-          const SizedBox(height: 10),
-          const Text('Your inventory is empty', style: TextStyle(color: Colors.white60, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          const Text('Open your first case to collect a skin.', style: TextStyle(color: Colors.white38, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  Widget _inventoryCard(OwnedSkin item) {
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A202C),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: item.skin.color.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(item.skin.icon, color: item.skin.color, size: 28),
-              const Spacer(),
-              Container(width: 7, height: 7, decoration: BoxDecoration(color: item.skin.color, shape: BoxShape.circle)),
-            ],
-          ),
-          const Spacer(),
-          Text(item.skin.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(item.skin.weapon, style: const TextStyle(color: Colors.white54, fontSize: 11)),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(child: Text('${item.skin.value.toStringAsFixed(2)}', style: TextStyle(color: item.skin.color, fontWeight: FontWeight.w900))),
-              InkWell(
-                onTap: () => _sell(item),
-                borderRadius: BorderRadius.circular(8),
-                child: const Padding(padding: EdgeInsets.all(5), child: Icon(Icons.sell_outlined, size: 17, color: Colors.white70)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+class GameShell extends StatefulWidget { const GameShell({super.key}); @override State<GameShell> createState()=>_GameShellState(); }
+class _GameShellState extends State<GameShell> {
+ final random=Random(); final inventory=<OwnedSkin>[];
+ late final missions=<Mission>[
+  Mission('First drop','Open 1 case',1,80,Icons.inventory_2),
+  Mission('Collector','Open 3 cases',3,180,Icons.collections),
+  Mission('Big spender','Sell skins worth 10 credits',10,220,Icons.sell),
+  Mission('Season grinder','Earn 500 season XP',500,250,Icons.bolt),
+ ];
+ final claimedLevels=<int>{};
+ int tab=0,xp=0,opened=0,serial=0,soldCredits=0; double balance=100;
+ bool opening=false; Skin? lastDrop; CaseInfo selected=caseList.first;
+ String status='Choose a case and try your luck';
+ int get level=>xp~/1000+1; int get levelXp=>xp%1000;
+ double get progress=>levelXp/1000;
+ void earnXp(int amount){ xp+=amount; for(final m in missions.where((m)=>m.title=='Season grinder')){m.progress=xp.clamp(0,m.goal);} }
+ Skin roll(){
+  final n=random.nextInt(1000);
+  final rarity=n<450?'Consumer':n<700?'Industrial':n<870?'Mil-Spec':n<950?'Restricted':n<985?'Classified':n<998?'Covert':'Rare special';
+  final pool=skins.where((s)=>s.rarity==rarity).toList();
+  return pool[random.nextInt(pool.length)];
+ }
+ Future<void> openCase() async {
+  if(opening)return;
+  if(balance<selected.price){setState(()=>status='Not enough virtual credits. Sell a skin first.');return;}
+  setState(()=>{opening=true,balance-=selected.price,lastDrop=null,status='Opening ${selected.name}…'});
+  await Future<void>.delayed(const Duration(milliseconds:650)); if(!mounted)return;
+  final drop=roll();
+  setState((){
+   opening=false;lastDrop=drop;inventory.insert(0,OwnedSkin(drop,++serial));opened++;earnXp(100);
+   for(final m in missions.where((m)=>m.title=='First drop'||m.title=='Collector')){m.progress++;}
+   status='You got ${drop.name}!';
+  });
+ }
+ void sell(OwnedSkin item){setState((){
+  inventory.remove(item);balance+=item.skin.value;soldCredits+=item.skin.value.ceil();earnXp(10);
+  for(final m in missions.where((m)=>m.title=='Big spender')){m.progress=soldCredits.clamp(0,m.goal);}
+  status='Sold ${item.skin.name} for $${item.skin.value.toStringAsFixed(2)}';
+ });}
+ void claimMission(Mission m){if(!m.complete||m.claimed)return;setState(()=>{m.claimed=true,balance+=m.reward});}
+ void claimLevel(int n){if(n>level||claimedLevels.contains(n))return;setState(()=>{claimedLevels.add(n),balance+=50+n*10});}
+ @override Widget build(BuildContext context)=>Scaffold(
+  body:SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),missionPage(),inventoryPage(),profilePage()])),
+  bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(i)=>setState(()=>tab=i),backgroundColor:const Color(0xFF171C27),indicatorColor:mint.withValues(alpha:.18),destinations:const[
+   NavigationDestination(icon:Icon(Icons.inventory_2_outlined),selectedIcon:Icon(Icons.inventory_2),label:'Cases'),
+   NavigationDestination(icon:Icon(Icons.military_tech_outlined),selectedIcon:Icon(Icons.military_tech),label:'Season'),
+   NavigationDestination(icon:Icon(Icons.task_alt_outlined),selectedIcon:Icon(Icons.task_alt),label:'Missions'),
+   NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'Inventory'),
+   NavigationDestination(icon:Icon(Icons.person_outline),selectedIcon:Icon(Icons.person),label:'Profile'),
+  ]),
+ );
+ Widget shell(String title,String subtitle,List<Widget> children)=>CustomScrollView(slivers:[
+  SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(18,18,18,8),child:Row(children:[
+   Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(fontSize:25,fontWeight:FontWeight.w900)),const SizedBox(height:4),Text(subtitle,style:const TextStyle(color:muted,fontSize:12))])),
+   Container(padding:const EdgeInsets.symmetric(horizontal:12,vertical:9),decoration:BoxDecoration(color:panel,borderRadius:BorderRadius.circular(14)),child:Row(children:[const Icon(Icons.account_balance_wallet,size:17,color:mint),const SizedBox(width:6),Text('$${balance.toStringAsFixed(2)}',style:const TextStyle(fontWeight:FontWeight.bold))])),
+  ]))),
+  SliverPadding(padding:const EdgeInsets.fromLTRB(16,8,16,26),sliver:SliverList(delegate:SliverChildListDelegate(children))),
+ ]);
+ Widget box(Widget child,{EdgeInsets padding=const EdgeInsets.all(16)})=>Container(padding:padding,decoration:BoxDecoration(color:panel,borderRadius:BorderRadius.circular(20),border:Border.all(color:Colors.white.withValues(alpha:.06))),child:child);
+ Widget heading(String text,{String? trailing})=>Padding(padding:const EdgeInsets.only(top:20,bottom:12),child:Row(children:[Expanded(child:Text(text.toUpperCase(),style:const TextStyle(fontSize:12,fontWeight:FontWeight.w900,letterSpacing:1.2))),if(trailing!=null)Text(trailing,style:const TextStyle(color:mint,fontWeight:FontWeight.bold,fontSize:11))]));
+ Widget xpBar()=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+  Row(children:[Expanded(child:Text('LEVEL $level',style:const TextStyle(fontWeight:FontWeight.w900))),Text('$xp XP',style:const TextStyle(color:mint,fontWeight:FontWeight.bold,fontSize:11))]),
+  const SizedBox(height:8),ClipRRect(borderRadius:BorderRadius.circular(20),child:LinearProgressIndicator(value:progress,minHeight:8,color:mint,backgroundColor:Colors.white10)),
+  const SizedBox(height:6),Text('$levelXp / 1000 XP to next level',style:const TextStyle(color:muted,fontSize:11)),
+ ]);
+ Widget home()=>shell('CASE LAB','CS2 CASE SIMULATOR · SEASON 01',[
+  box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('YOUR NEXT\nBIG DROP?',style:TextStyle(fontSize:30,height:1.04,fontWeight:FontWeight.w900)),const SizedBox(height:9),const Text('Open cases, collect skins and climb the season track.',style:TextStyle(color:muted)),const SizedBox(height:16),xpBar()] ),padding:const EdgeInsets.all(20)),
+  heading('Choose a case',trailing:'${caseList.length} CASES'),
+  SizedBox(height:155,child:ListView.separated(scrollDirection:Axis.horizontal,itemCount:caseList.length,separatorBuilder:(_,__)=>const SizedBox(width:10),itemBuilder:(context,i){
+   final c=caseList[i];return GestureDetector(onTap:opening?null:()=>setState(()=>{selected=c,lastDrop=null,status='Ready to open ${c.name}'}),child:Container(width:155,padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:selected==c?c.color.withValues(alpha:.16):panel,borderRadius:BorderRadius.circular(18),border:Border.all(color:selected==c?c.color:Colors.white10)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(c.icon,size:29,color:c.color),const Spacer(),Text(c.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(c.subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10)),const SizedBox(height:5),Text('$${c.price.toStringAsFixed(2)}',style:TextStyle(color:c.color,fontWeight:FontWeight.w900))])));
+  })),
+  const SizedBox(height:14),
+  box(Column(children:[
+   Container(width:90,height:90,decoration:BoxDecoration(shape:BoxShape.circle,color:(lastDrop?.color??selected.color).withValues(alpha:.12),border:Border.all(color:(lastDrop?.color??selected.color).withValues(alpha:.6),width:2)),child:Icon(opening?Icons.hourglass_top:(lastDrop?.icon??selected.icon),size:42,color:lastDrop?.color??selected.color)),
+   const SizedBox(height:12),Text(lastDrop?.name??selected.name,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:20)),Text(lastDrop?.weapon??selected.subtitle,style:const TextStyle(color:muted,fontSize:12)),
+   if(lastDrop!=null)Padding(padding:const EdgeInsets.only(top:6),child:Text('${lastDrop!.rarity} · $${lastDrop!.value.toStringAsFixed(2)}',style:TextStyle(color:lastDrop!.color,fontWeight:FontWeight.bold))),
+   const SizedBox(height:8),Text(status,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:12)),const SizedBox(height:14),
+   SizedBox(width:double.infinity,height:50,child:FilledButton.icon(onPressed:opening?null:openCase,icon:Icon(opening?Icons.hourglass_empty:Icons.lock_open),label:Text(opening?'OPENING…':'OPEN CASE · $${selected.price.toStringAsFixed(2)}'),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:bg))),
+   const SizedBox(height:7),const Text('Simulation only · virtual credits and items',style:TextStyle(color:muted,fontSize:10)),
+  ])),
+  heading('Season overview'),
+  Row(children:[Expanded(child:box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.military_tech,color:mint),Text('LEVEL $level',style:const TextStyle(fontWeight:FontWeight.w900)),const Text('Battle Pass',style:TextStyle(color:muted,fontSize:11))]))),const SizedBox(width:10),Expanded(child:box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.task_alt,color:Color(0xFFB38CFF)),Text('${missions.where((m)=>m.claimed).length}/4',style:const TextStyle(fontWeight:FontWeight.w900)),const Text('Rewards claimed',style:TextStyle(color:muted,fontSize:11))]))) ]),
+  OutlinedButton.icon(onPressed:()=>setState(()=>tab=1),icon:const Icon(Icons.arrow_forward),label:const Text('OPEN BATTLE PASS')),
+ ]);
+ Widget battlePass()=>shell('BATTLE PASS','SEASON 01 · OPERATION NIGHTFALL',[
+  box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Row(children:[Container(width:52,height:52,decoration:BoxDecoration(color:mint.withValues(alpha:.14),borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.military_tech,color:mint,size:31)),const SizedBox(width:12),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('OPERATION NIGHTFALL',style:TextStyle(fontWeight:FontWeight.w900,fontSize:16)),Text('Free reward track',style:TextStyle(color:muted,fontSize:12))]))]),
+   const SizedBox(height:18),xpBar(),const SizedBox(height:8),const Text('Earn XP from case openings and missions. Claim unlocked rewards below.',style:TextStyle(color:muted,fontSize:11)),
+  ]),padding:const EdgeInsets.all(20)),
+  heading('Reward track',trailing:'10 LEVELS'),
+  ...List.generate(10,(i){
+   final n=i+1;final unlocked=n<=level;final claimed=claimedLevels.contains(n);
+   const names=['Credit bundle','Sticker capsule','Mil-Spec drop','Credit bundle','Case token','Classified drop','Rare charm','Credit bundle','Premium case','Knife token'];
+   final icons=[Icons.monetization_on,Icons.stars,Icons.inventory_2,Icons.monetization_on,Icons.confirmation_number,Icons.auto_awesome,Icons.diamond,Icons.monetization_on,Icons.card_giftcard,Icons.workspace_premium];
+   return Padding(padding:const EdgeInsets.only(bottom:9),child:box(Row(children:[
+    Container(width:42,height:46,decoration:BoxDecoration(color:unlocked?mint.withValues(alpha:.14):Colors.white.withValues(alpha:.04),borderRadius:BorderRadius.circular(12)),child:Center(child:Text('$n',style:TextStyle(fontWeight:FontWeight.w900,color:unlocked?mint:muted)))),
+    const SizedBox(width:11),Icon(icons[i],color:unlocked?mint:muted),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(names[i],style:const TextStyle(fontWeight:FontWeight.bold)),Text('Level $n reward',style:const TextStyle(color:muted,fontSize:11))])),
+    if(claimed)const Icon(Icons.check_circle,color:mint) else if(unlocked)TextButton(onPressed:()=>claimLevel(n),child:const Text('CLAIM')) else const Icon(Icons.lock_outline,color:muted),
+   ]),padding:const EdgeInsets.all(12)));
+  }),
+  box(const Text('Demo season: progress is stored locally in memory and resets when the app restarts. Cloud saves and a real-time season timer are not connected.',style:TextStyle(color:muted,fontSize:11))),
+ ]);
+ Widget missionPage()=>shell('MISSIONS','DAILY CHALLENGES · BONUS CREDITS',[
+  box(const Row(children:[Icon(Icons.task_alt,color:Color(0xFFB38CFF),size:30),SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Mission board',style:TextStyle(fontWeight:FontWeight.w900,fontSize:16)),Text('Complete objectives for rewards and XP.',style:TextStyle(color:muted,fontSize:11))]))])),
+  heading('Your missions',trailing:'${missions.where((m)=>m.complete).length}/4 COMPLETE'),
+  ...missions.map((m)=>Padding(padding:const EdgeInsets.only(bottom:10),child:box(Column(children:[
+   Row(children:[Container(width:40,height:40,decoration:BoxDecoration(color:mint.withValues(alpha:.12),borderRadius:BorderRadius.circular(12)),child:Icon(m.icon,color:mint)),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(m.title,style:const TextStyle(fontWeight:FontWeight.bold)),Text(m.desc,style:const TextStyle(color:muted,fontSize:11))])),Text('+${m.reward}',style:const TextStyle(color:mint,fontWeight:FontWeight.w900))]),
+   const SizedBox(height:12),Row(children:[Expanded(child:ClipRRect(borderRadius:BorderRadius.circular(20),child:LinearProgressIndicator(value:(m.progress/m.goal).clamp(0,1),minHeight:6,color:m.complete?mint:const Color(0xFFB38CFF),backgroundColor:Colors.white10))),const SizedBox(width:10),Text('${min(m.progress,m.goal)}/${m.goal}',style:const TextStyle(color:muted,fontSize:11))]),
+   if(m.complete)Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:m.claimed?null:()=>claimMission(m),icon:Icon(m.claimed?Icons.check_circle:Icons.redeem),label:Text(m.claimed?'CLAIMED':'CLAIM REWARD'))),
+  ])))),
+  box(const Text('Daily reset is not connected yet; mission progress is a local demo.',style:TextStyle(color:muted,fontSize:11))),
+ ]);
+ Widget inventoryPage()=>shell('INVENTORY','${inventory.length} ITEMS · SELL SKINS FOR CREDITS',[
+  if(inventory.isEmpty)box(const Column(children:[Icon(Icons.inventory_2_outlined,size:45,color:muted),SizedBox(height:9),Text('Your inventory is empty',style:TextStyle(fontWeight:FontWeight.bold)),SizedBox(height:4),Text('Open a case to collect your first skin.',style:TextStyle(color:muted,fontSize:12))]))
+  else ...[
+   box(Row(children:[const Expanded(child:Text('COLLECTION VALUE',style:TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.bold))),Text('$${inventory.fold<double>(0,(sum,item)=>sum+item.skin.value).toStringAsFixed(2)}',style:const TextStyle(color:mint,fontWeight:FontWeight.w900,fontSize:18))])),
+   const SizedBox(height:10),
+   ...inventory.map((item)=>Padding(padding:const EdgeInsets.only(bottom:9),child:box(Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:item.skin.color.withValues(alpha:.12),borderRadius:BorderRadius.circular(12)),child:Icon(item.skin.icon,color:item.skin.color,size:26)),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(item.skin.name,style:const TextStyle(fontWeight:FontWeight.bold)),Text('${item.skin.weapon} · ${item.skin.rarity}',style:const TextStyle(color:muted,fontSize:10)),Text('$${item.skin.value.toStringAsFixed(2)}',style:TextStyle(color:item.skin.color,fontWeight:FontWeight.bold))])),TextButton(onPressed:()=>sell(item),child:const Text('SELL'))]),padding:const EdgeInsets.all(12)))),
+  ],
+ ]);
+ Widget stat(IconData icon,String value,String label,Color color)=>box(Row(children:[Icon(icon,color:color,size:24),const SizedBox(width:9),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(value,style:const TextStyle(fontWeight:FontWeight.w900)),Text(label,style:const TextStyle(color:muted,fontSize:10))]))]),padding:const EdgeInsets.all(13));
+ Widget profilePage()=>shell('PLAYER PROFILE','YOUR CAREER SUMMARY',[
+  box(Column(children:[Container(width:76,height:76,decoration:BoxDecoration(shape:BoxShape.circle,color:mint.withValues(alpha:.13),border:Border.all(color:mint.withValues(alpha:.6),width:2)),child:const Icon(Icons.person,color:mint,size:40)),const SizedBox(height:12),const Text('CASE COMMANDER',style:TextStyle(fontWeight:FontWeight.w900,fontSize:20)),const Text('Season 01 · Free player',style:TextStyle(color:muted,fontSize:12)),const SizedBox(height:16),xpBar()] ),padding:const EdgeInsets.all(20)),
+  heading('Career stats'),
+  Row(children:[Expanded(child:stat(Icons.lock_open,'$opened','Cases opened',mint)),const SizedBox(width:9),Expanded(child:stat(Icons.grid_view,'${inventory.length}','Skins owned',const Color(0xFFB38CFF)))]),
+  const SizedBox(height:9),Row(children:[Expanded(child:stat(Icons.task_alt,'${missions.where((m)=>m.claimed).length}','Missions claimed',const Color(0xFFFFC857))),const SizedBox(width:9),Expanded(child:stat(Icons.sell,'$soldCredits','Credits from sales',const Color(0xFF43A6E8)))]),
+  heading('About'),
+  box(const Text('Fan-made CS2-style simulator for entertainment. All balances and items are virtual. No real-money trading, cloud saves or Valve affiliation.',style:TextStyle(color:muted,fontSize:11))),
+ ]);
 }
