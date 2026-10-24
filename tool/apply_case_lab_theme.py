@@ -560,7 +560,7 @@ if "Future<String> recordSkinDrop({" not in tracking:
     skin_start = tracking.index("  Future<String> recordSkinDrop({")
     skin_end = tracking.index("  Future<void> recordStickerDrop({", skin_start)
     skin_method = tracking[skin_start:skin_end]
-    skin_method = skin_method.replace("    final skin = drop.skin;", "    final skin = drop.skin\n    final entryId = _entryId();", 1)
+    skin_method = skin_method.replace("    final skin = drop.skin;", "    final skin = drop.skin;\n    final entryId = _entryId();", 1)
     skin_method = skin_method.replace("entryId: _entryId(),", "entryId: entryId,", 1)
     skin_method = skin_method.replace("      ),\n    );\n  }\n\n", "      ),\n    );\n    return entryId;\n  }\n\n", 1)
     tracking = tracking[:skin_start] + skin_method + tracking[skin_end:]
