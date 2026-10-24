@@ -58,6 +58,7 @@ class _GameShellState extends State<GameShell> {
   Mission('Season grinder','Earn 500 season XP',500,250,Icons.bolt),
  ];
  final claimedLevels=<int>{};
+ int duelRounds=3,duelCount=0,duelWins=0; bool duelRunning=false; List<Skin> duelPlayerDrops=[],duelBotDrops=[]; String duelResult='Create a duel against the bot.';
  OwnedSkin? upgradeSource; Skin? upgradeTarget; int upgradeAttempts=0,upgradeWins=0; final upgradeHistory=<String>[];
  int tab=0,xp=0,opened=0,serial=0,soldCredits=0; double balance=100;
  bool opening=false; Skin? lastDrop; CaseInfo selected=caseList.first;
@@ -91,11 +92,12 @@ class _GameShellState extends State<GameShell> {
  void claimMission(Mission m){if(!m.complete||m.claimed)return;setState(() { m.claimed=true; balance+=m.reward; });}
  void claimLevel(int n){if(n>level||claimedLevels.contains(n))return;setState(() { claimedLevels.add(n); balance+=50+n*10; });}
  @override Widget build(BuildContext context)=>Scaffold(
-  body:SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),upgradePage(),missionPage(),inventoryPage(),profilePage()])),
+  body:SafeArea(child:IndexedStack(index:tab,children:[home(),battlePass(),upgradePage(),duelPage(),missionPage(),inventoryPage(),profilePage()])),
   bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(i)=>setState(()=>tab=i),backgroundColor:const Color(0xFF171C27),indicatorColor:mint.withValues(alpha:.18),destinations:const[
    NavigationDestination(icon:Icon(Icons.inventory_2_outlined),selectedIcon:Icon(Icons.inventory_2),label:'Cases'),
    NavigationDestination(icon:Icon(Icons.military_tech_outlined),selectedIcon:Icon(Icons.military_tech),label:'Season'),
    NavigationDestination(icon:Icon(Icons.auto_fix_high_outlined),selectedIcon:Icon(Icons.auto_fix_high),label:'Upgrade'),
+   NavigationDestination(icon:Icon(Icons.sports_mma_outlined),selectedIcon:Icon(Icons.sports_mma),label:'Duel'),
    NavigationDestination(icon:Icon(Icons.task_alt_outlined),selectedIcon:Icon(Icons.task_alt),label:'Missions'),
    NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'Inventory'),
    NavigationDestination(icon:Icon(Icons.person_outline),selectedIcon:Icon(Icons.person),label:'Profile'),
@@ -192,6 +194,53 @@ class _GameShellState extends State<GameShell> {
    heading('Recent attempts'),
    ...upgradeHistory.take(8).map((entry)=>Padding(padding:const EdgeInsets.only(bottom:7),child:box(Text(entry,style:TextStyle(fontWeight:FontWeight.bold,color:entry.startsWith('WIN')?mint:const Color(0xFFFF7B7B))),padding:const EdgeInsets.all(12)))),
   ],
+ ]);
+
+
+ Future<void> startDuel() async {
+  if(duelRunning)return;
+  final cost=selected.price*duelRounds;
+  if(balance<cost){setState(()=>status='Not enough virtual credits for this duel.');return;}
+  setState(() { duelRunning=true; balance-=cost; duelPlayerDrops=[]; duelBotDrops=[]; duelResult='Opening duel cases…'; });
+  for(var i=0;i<duelRounds;i++){
+   await Future<void>.delayed(const Duration(milliseconds:350));
+   if(!mounted)return;
+   final p=roll(),b=roll();
+   setState(() { duelPlayerDrops=[...duelPlayerDrops,p]; duelBotDrops=[...duelBotDrops,b]; });
+  }
+  final playerValue=duelPlayerDrops.fold<double>(0,(sum,s)=>sum+s.value);
+  final botValue=duelBotDrops.fold<double>(0,(sum,s)=>sum+s.value);
+  setState(() {
+   duelRunning=false; duelCount++;
+   if(playerValue>botValue){duelWins++;balance+=cost*2;duelResult='YOU WIN · ${playerValue.toStringAsFixed(2)} vs ${botValue.toStringAsFixed(2)}';}
+   else if(playerValue==botValue){balance+=cost;duelResult='DRAW · both totals are equal. Entry refunded.';}
+   else{duelResult='BOT WINS · ${playerValue.toStringAsFixed(2)} vs ${botValue.toStringAsFixed(2)}';}
+  });
+ }
+ Widget duelPage()=>shell('CASE DUELS','PLAY AGAINST THE BOT · VIRTUAL CREDITS ONLY',[
+  box(const Row(children:[Icon(Icons.sports_mma,color:mint,size:30),SizedBox(width:12),Expanded(child:Text('Both sides open the same case for each round. The side with the highest total skin value wins.',style:TextStyle(color:muted,fontSize:12))))])),
+  heading('Duel setup'),
+  box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   const Text('Case used for every round',style:TextStyle(fontWeight:FontWeight.bold)),
+   const SizedBox(height:7),
+   DropdownButtonFormField<CaseInfo>(value:selected,isExpanded:true,items:caseList.map((c)=>DropdownMenuItem(value:c,child:Text('${c.name} · ${c.price.toStringAsFixed(2)}'))).toList(),onChanged:duelRunning?null:(c)=>setState(()=>selected=c!)),
+   const SizedBox(height:16),const Text('Number of rounds',style:TextStyle(fontWeight:FontWeight.bold)),
+   const SizedBox(height:8),Wrap(spacing:8,children:[1,3,5].map((n)=>ChoiceChip(label:Text('$n rounds'),selected:duelRounds==n,onSelected:duelRunning?null:(v)=>setState(()=>duelRounds=n))).toList()),
+   const SizedBox(height:12),Row(children:[const Expanded(child:Text('Entry cost',style:TextStyle(color:muted))),Text('${(selected.price*duelRounds).toStringAsFixed(2)}',style:const TextStyle(color:mint,fontWeight:FontWeight.w900))]),
+   const SizedBox(height:12),SizedBox(width:double.infinity,height:48,child:FilledButton.icon(onPressed:duelRunning?null:startDuel,icon:Icon(duelRunning?Icons.hourglass_top:Icons.play_arrow),label:Text(duelRunning?'DUEL IN PROGRESS…':'START DUEL'),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:bg))),
+   const SizedBox(height:6),const Text('Winner receives twice the entry cost. A draw refunds the entry. Skins shown are simulated and are not added to inventory.',style:TextStyle(color:muted,fontSize:10)),
+  ])),
+  const SizedBox(height:12),box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Text(duelResult,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:15)),
+   const SizedBox(height:12),
+   Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Expanded(child:Column(children:[const Text('YOU',style:TextStyle(color:mint,fontWeight:FontWeight.w900)),const SizedBox(height:8),...duelPlayerDrops.asMap().entries.map((e)=>Padding(padding:const EdgeInsets.only(bottom:7),child:box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Round ${e.key+1}',style:const TextStyle(color:muted,fontSize:10)),Text(e.value.name,style:const TextStyle(fontWeight:FontWeight.bold),maxLines:2,overflow:TextOverflow.ellipsis),Text('${e.value.value.toStringAsFixed(2)}',style:TextStyle(color:e.value.color,fontWeight:FontWeight.bold))]),padding:const EdgeInsets.all(9))))])),
+    const SizedBox(width:8),
+    Expanded(child:Column(children:[const Text('BOT',style:TextStyle(color:Color(0xFFFFC857),fontWeight:FontWeight.w900)),const SizedBox(height:8),...duelBotDrops.asMap().entries.map((e)=>Padding(padding:const EdgeInsets.only(bottom:7),child:box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Round ${e.key+1}',style:const TextStyle(color:muted,fontSize:10)),Text(e.value.name,style:const TextStyle(fontWeight:FontWeight.bold),maxLines:2,overflow:TextOverflow.ellipsis),Text('${e.value.value.toStringAsFixed(2)}',style:TextStyle(color:e.value.color,fontWeight:FontWeight.bold))]),padding:const EdgeInsets.all(9))))])),
+   ]),
+  ])),
+  heading('Duel stats'),
+  Row(children:[Expanded(child:stat(Icons.sports_mma,'$duelCount','Duels played',mint)),const SizedBox(width:9),Expanded(child:stat(Icons.emoji_events,'$duelWins','Wins',const Color(0xFFFFC857)))]),
  ]);
 
  Widget missionPage()=>shell('MISSIONS','DAILY CHALLENGES · BONUS CREDITS',[
