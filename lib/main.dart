@@ -128,7 +128,7 @@ class _GameShellState extends State<GameShell> {
        duration:const Duration(milliseconds:180),
        padding:const EdgeInsets.all(9),
        decoration:BoxDecoration(
-        color:item.color.withValues(alpha:isWinner?.22:.08),
+        color:item.color.withValues(alpha:isWinner ? 0.22 : 0.08),
         borderRadius:BorderRadius.circular(14),
         border:Border.all(color:isWinner?Colors.white:item.color.withValues(alpha:.75),width:isWinner?2.5:1.2),
         boxShadow:isWinner?[BoxShadow(color:item.color.withValues(alpha:.35),blurRadius:16)]:null,
