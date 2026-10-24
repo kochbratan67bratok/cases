@@ -218,7 +218,7 @@ class _GameShellState extends State<GameShell> {
   });
  }
  Widget duelPage()=>shell('CASE DUELS','PLAY AGAINST THE BOT · VIRTUAL CREDITS ONLY',[
-  box(const Row(children:[Icon(Icons.sports_mma,color:mint,size:30),SizedBox(width:12),Expanded(child:Text('Both sides open the same case for each round. The side with the highest total skin value wins.',style:TextStyle(color:muted,fontSize:12))))])),
+  box(const Row(children:[Icon(Icons.sports_mma,color:mint,size:30),SizedBox(width:12),Expanded(child:Text('Both sides open the same case for each round. The side with the highest total skin value wins.',style:TextStyle(color:muted,fontSize:12)))])),
   heading('Duel setup'),
   box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
    const Text('Case used for every round',style:TextStyle(fontWeight:FontWeight.bold)),
