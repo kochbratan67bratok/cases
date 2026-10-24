@@ -11,17 +11,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Generate Android platform files
-        run: flutter create --platforms=android --project-name cases .
-      - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos
-      - run: flutter test
-      - run: flutter build apk --release
+      - name: Check Flutter SDK
+        working-directory: vendor/CS2-Simulator
+        run: flutter --version
+      - name: Get dependencies
+        working-directory: vendor/CS2-Simulator
+        run: flutter pub get
+      - name: Analyze
+        working-directory: vendor/CS2-Simulator
+        run: flutter analyze --no-fatal-infos
+      - name: Test
+        working-directory: vendor/CS2-Simulator
+        run: flutter test
+      - name: Build release APK
+        working-directory: vendor/CS2-Simulator
+        run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
           name: cases-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: vendor/CS2-Simulator/build/app/outputs/flutter-apk/app-release.apk
