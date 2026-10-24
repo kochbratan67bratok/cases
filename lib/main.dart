@@ -87,7 +87,7 @@ class _GameShellState extends State<GameShell> {
  void sell(OwnedSkin item){setState((){
   inventory.remove(item);balance+=item.skin.value;soldCredits+=item.skin.value.ceil();earnXp(10);
   for(final m in missions.where((m)=>m.title=='Big spender')){m.progress=soldCredits.clamp(0,m.goal);}
-  status='Sold ${item.skin.name} for \${item.skin.value.toStringAsFixed(2)}';
+  status='Sold ${item.skin.name} for ${item.skin.value.toStringAsFixed(2)}';
  });}
  void claimMission(Mission m){if(!m.complete||m.claimed)return;setState(() { m.claimed=true; balance+=m.reward; });}
  void claimLevel(int n){if(n>level||claimedLevels.contains(n))return;setState(() { claimedLevels.add(n); balance+=50+n*10; });}
@@ -106,7 +106,7 @@ class _GameShellState extends State<GameShell> {
  Widget shell(String title,String subtitle,List<Widget> children)=>CustomScrollView(slivers:[
   SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(18,18,18,8),child:Row(children:[
    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(fontSize:25,fontWeight:FontWeight.w900)),const SizedBox(height:4),Text(subtitle,style:const TextStyle(color:muted,fontSize:12))])),
-   Container(padding:const EdgeInsets.symmetric(horizontal:12,vertical:9),decoration:BoxDecoration(color:panel,borderRadius:BorderRadius.circular(14)),child:Row(children:[const Icon(Icons.account_balance_wallet,size:17,color:mint),const SizedBox(width:6),Text('\${balance.toStringAsFixed(2)}',style:const TextStyle(fontWeight:FontWeight.bold))])),
+   Container(padding:const EdgeInsets.symmetric(horizontal:12,vertical:9),decoration:BoxDecoration(color:panel,borderRadius:BorderRadius.circular(14)),child:Row(children:[const Icon(Icons.account_balance_wallet,size:17,color:mint),const SizedBox(width:6),Text('${balance.toStringAsFixed(2)}',style:const TextStyle(fontWeight:FontWeight.bold))])),
   ]))),
   SliverPadding(padding:const EdgeInsets.fromLTRB(16,8,16,26),sliver:SliverList(delegate:SliverChildListDelegate(children))),
  ]);
@@ -121,15 +121,15 @@ class _GameShellState extends State<GameShell> {
   box(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('YOUR NEXT\nBIG DROP?',style:TextStyle(fontSize:30,height:1.04,fontWeight:FontWeight.w900)),const SizedBox(height:9),const Text('Open cases, collect skins and climb the season track.',style:TextStyle(color:muted)),const SizedBox(height:16),xpBar()] ),padding:const EdgeInsets.all(20)),
   heading('Choose a case',trailing:'${caseList.length} CASES'),
   SizedBox(height:155,child:ListView.separated(scrollDirection:Axis.horizontal,itemCount:caseList.length,separatorBuilder:(_,__)=>const SizedBox(width:10),itemBuilder:(context,i){
-   final c=caseList[i];return GestureDetector(onTap:opening?null:()=>setState(() { selected=c; lastDrop=null; status='Ready to open ${c.name}'; }),child:Container(width:155,padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:selected==c?c.color.withValues(alpha:.16):panel,borderRadius:BorderRadius.circular(18),border:Border.all(color:selected==c?c.color:Colors.white10)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(c.icon,size:29,color:c.color),const Spacer(),Text(c.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(c.subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10)),const SizedBox(height:5),Text('\${c.price.toStringAsFixed(2)}',style:TextStyle(color:c.color,fontWeight:FontWeight.w900))])));
+   final c=caseList[i];return GestureDetector(onTap:opening?null:()=>setState(() { selected=c; lastDrop=null; status='Ready to open ${c.name}'; }),child:Container(width:155,padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:selected==c?c.color.withValues(alpha:.16):panel,borderRadius:BorderRadius.circular(18),border:Border.all(color:selected==c?c.color:Colors.white10)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(c.icon,size:29,color:c.color),const Spacer(),Text(c.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(c.subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10)),const SizedBox(height:5),Text('${c.price.toStringAsFixed(2)}',style:TextStyle(color:c.color,fontWeight:FontWeight.w900))])));
   })),
   const SizedBox(height:14),
   box(Column(children:[
    Container(width:90,height:90,decoration:BoxDecoration(shape:BoxShape.circle,color:(lastDrop?.color??selected.color).withValues(alpha:.12),border:Border.all(color:(lastDrop?.color??selected.color).withValues(alpha:.6),width:2)),child:Icon(opening?Icons.hourglass_top:(lastDrop?.icon??selected.icon),size:42,color:lastDrop?.color??selected.color)),
    const SizedBox(height:12),Text(lastDrop?.name??selected.name,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:20)),Text(lastDrop?.weapon??selected.subtitle,style:const TextStyle(color:muted,fontSize:12)),
-   if(lastDrop!=null)Padding(padding:const EdgeInsets.only(top:6),child:Text('${lastDrop!.rarity} · \${lastDrop!.value.toStringAsFixed(2)}',style:TextStyle(color:lastDrop!.color,fontWeight:FontWeight.bold))),
+   if(lastDrop!=null)Padding(padding:const EdgeInsets.only(top:6),child:Text('${lastDrop!.rarity} · ${lastDrop!.value.toStringAsFixed(2)}',style:TextStyle(color:lastDrop!.color,fontWeight:FontWeight.bold))),
    const SizedBox(height:8),Text(status,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:12)),const SizedBox(height:14),
-   SizedBox(width:double.infinity,height:50,child:FilledButton.icon(onPressed:opening?null:openCase,icon:Icon(opening?Icons.hourglass_empty:Icons.lock_open),label:Text(opening?'OPENING…':'OPEN CASE · \${selected.price.toStringAsFixed(2)}'),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:bg))),
+   SizedBox(width:double.infinity,height:50,child:FilledButton.icon(onPressed:opening?null:openCase,icon:Icon(opening?Icons.hourglass_empty:Icons.lock_open),label:Text(opening?'OPENING…':'OPEN CASE · ${selected.price.toStringAsFixed(2)}'),style:FilledButton.styleFrom(backgroundColor:mint,foregroundColor:bg))),
    const SizedBox(height:7),const Text('Simulation only · virtual credits and items',style:TextStyle(color:muted,fontSize:10)),
   ])),
   heading('Season overview'),
@@ -256,9 +256,9 @@ class _GameShellState extends State<GameShell> {
  Widget inventoryPage()=>shell('INVENTORY','${inventory.length} ITEMS · SELL SKINS FOR CREDITS',[
   if(inventory.isEmpty)box(const Column(children:[Icon(Icons.inventory_2_outlined,size:45,color:muted),SizedBox(height:9),Text('Your inventory is empty',style:TextStyle(fontWeight:FontWeight.bold)),SizedBox(height:4),Text('Open a case to collect your first skin.',style:TextStyle(color:muted,fontSize:12))]))
   else ...[
-   box(Row(children:[const Expanded(child:Text('COLLECTION VALUE',style:TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.bold))),Text('\${inventory.fold<double>(0,(sum,item)=>sum+item.skin.value).toStringAsFixed(2)}',style:const TextStyle(color:mint,fontWeight:FontWeight.w900,fontSize:18))])),
+   box(Row(children:[const Expanded(child:Text('COLLECTION VALUE',style:TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.bold))),Text('${inventory.fold<double>(0,(sum,item)=>sum+item.skin.value).toStringAsFixed(2)}',style:const TextStyle(color:mint,fontWeight:FontWeight.w900,fontSize:18))])),
    const SizedBox(height:10),
-   ...inventory.map((item)=>Padding(padding:const EdgeInsets.only(bottom:9),child:box(Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:item.skin.color.withValues(alpha:.12),borderRadius:BorderRadius.circular(12)),child:Icon(item.skin.icon,color:item.skin.color,size:26)),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(item.skin.name,style:const TextStyle(fontWeight:FontWeight.bold)),Text('${item.skin.weapon} · ${item.skin.rarity}',style:const TextStyle(color:muted,fontSize:10)),Text('\${item.skin.value.toStringAsFixed(2)}',style:TextStyle(color:item.skin.color,fontWeight:FontWeight.bold))])),TextButton(onPressed:()=>sell(item),child:const Text('SELL'))]),padding:const EdgeInsets.all(12)))),
+   ...inventory.map((item)=>Padding(padding:const EdgeInsets.only(bottom:9),child:box(Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:item.skin.color.withValues(alpha:.12),borderRadius:BorderRadius.circular(12)),child:Icon(item.skin.icon,color:item.skin.color,size:26)),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(item.skin.name,style:const TextStyle(fontWeight:FontWeight.bold)),Text('${item.skin.weapon} · ${item.skin.rarity}',style:const TextStyle(color:muted,fontSize:10)),Text('${item.skin.value.toStringAsFixed(2)}',style:TextStyle(color:item.skin.color,fontWeight:FontWeight.bold))])),TextButton(onPressed:()=>sell(item),child:const Text('SELL'))]),padding:const EdgeInsets.all(12)))),
   ],
  ]);
  Widget stat(IconData icon,String value,String label,Color color)=>box(Row(children:[Icon(icon,color:color,size:24),const SizedBox(width:9),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(value,style:const TextStyle(fontWeight:FontWeight.w900)),Text(label,style:const TextStyle(color:muted,fontSize:10))]))]),padding:const EdgeInsets.all(13));
