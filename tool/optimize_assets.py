@@ -22,11 +22,14 @@ def main():
                 if getattr(source, 'is_animated', False):
                     skipped += 1
                     continue
+                if source.width <= edge and source.height <= edge and old_size <= 40 * 1024:
+                    skipped += 1
+                    continue
                 image = ImageOps.exif_transpose(source)
                 image.load()
                 image.thumbnail((edge, edge), Image.Resampling.LANCZOS)
                 alpha = 'A' in image.getbands() or 'transparency' in image.info
-                image.convert('RGBA' if alpha else 'RGB').save(temp, format='WEBP', quality=quality, method=6, alpha_quality=100)
+                image.convert('RGBA' if alpha else 'RGB').save(temp, format='WEBP', quality=quality, method=4, alpha_quality=100)
             new_size = temp.stat().st_size
             if new_size < old_size:
                 temp.replace(path)
