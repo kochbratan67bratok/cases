@@ -2,7 +2,7 @@ name: Build Yandex Games upload ZIP
 
 on:
   push:
-    branches: ["codex/production-readiness"]
+    branches: ["codex/production-readiness", "codex/daily-skin-case-sounds"]
   workflow_dispatch:
 
 permissions:
