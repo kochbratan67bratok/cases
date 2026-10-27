@@ -1,44 +1,36 @@
-# Case Lab — HTML5 / Yandex Games prototype
+# CASE LAB — HTML5 / Yandex Games
 
-Standalone browser-first prototype based on the CS2 Simulator concept. The existing Flutter app is untouched; this version lives in `html5/` so it can be developed and tested independently.
+Standalone browser-first case simulator prototype for Yandex Games. The root `index.html` is the entry point.
 
-## Included mechanics
-
-- Three virtual cases with rarity-weighted drops.
-- Virtual credits, inventory, item valuation and selling.
-- Daily virtual-credit reward.
-- Five-item upgrade contract.
-- Local progress save with `localStorage`.
-- Optional Yandex Games cloud save when SDK/player APIs are available.
-- Rewarded-video integration: grants +150 virtual credits only in the SDK's `onRewarded` callback.
-- Responsive layout for desktop and mobile.
+## Features
+- Six virtual cases with rarity-weighted drops.
+- Virtual credits, inventory, item valuation, filters and selling.
+- Upgrade contract using five inventory items.
+- 30-level seasonal battle pass with free rewards.
+- Missions for opening cases, selling items and receiving rare drops.
+- Daily virtual-credit reward and optional rewarded-video bonus.
+- Local save (`localStorage`) and optional Yandex Games cloud save.
+- Responsive desktop/mobile layout.
+- SDK initialization and rewarded ads via `/sdk.js` and `adv.showRewardedVideo`.
 
 ## Run locally
-
-The SDK is loaded from `/sdk.js`, as recommended for games uploaded to Yandex Games. For local testing that path will not resolve unless the Yandex development proxy/preview is used. The game is designed to continue in standalone mode without the SDK.
-
-From the repository root, serve the folder with any static HTTP server, for example:
-
+From the repository root:
 ```bash
-python3 -m http.server 8080 --directory html5
+python3 -m http.server 8080
 ```
+Open `http://localhost:8080`. The platform SDK is only available in a Yandex Games environment, so ads and cloud save must be tested in the Developer Console preview.
 
-Open `http://localhost:8080`.
+## Upload
+1. Create a draft in Yandex Games Developer Console.
+2. Zip the repository contents with `index.html` at the ZIP root.
+3. Upload the ZIP and test SDK initialization, ads, cloud save, pause/resume and mobile layout.
+4. Configure monetization in the console.
+5. Replace emoji placeholders with original or properly licensed artwork before release.
 
-## Yandex Games publication checklist
+## Important
+This is a prototype, not a published or fully QA-tested game. Rewarded ads only grant a bonus from the SDK's `onRewarded` callback. Monetization requires platform configuration and approval. All credits/items are virtual; no real-money purchases, betting, player trading or cash-out exist. This is an unofficial fan project and is not affiliated with Valve or Counter-Strike 2.
 
-1. Create a game draft in the Yandex Games Developer Console.
-2. Upload the contents of `html5/` as a ZIP archive (the entry point is `index.html`).
-3. Confirm SDK initialization in the platform debug panel.
-4. Enable/configure monetization in the Developer Console.
-5. Test rewarded ads, cloud saves, pause/resume, mobile layout and moderation requirements.
-6. Replace placeholder emoji art with original/licensed assets before release.
-
-Official documentation:
+Official docs:
 - SDK: https://yandex.ru/dev/games/doc/ru/sdk
 - SDK connection: https://yandex.ru/dev/games/doc/ru/sdk/sdk-about
 - Ads: https://yandex.ru/dev/games/doc/ru/sdk/sdk-adv
-
-## Important
-
-This is a prototype, not a published game. Ads do not show locally unless the platform SDK is initialized in an eligible Yandex Games environment. Credits and items are virtual only; there are no real-money purchases, trading or cash-outs. No revenue is guaranteed.
