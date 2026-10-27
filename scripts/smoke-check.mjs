@@ -22,6 +22,9 @@ check(/function catalogSkinPrice\s*\(/.test(html) && /function catalogCasePrice\
 check(/function refreshMarketPricesForContainer\s*\(/.test(html) && /api\.openskin\.dev\/v1\/prices\/batch/.test(html), "case contents can load live CS2 market prices from a batched price API");
 check(/1\s*000\s*CR/.test(html) && /marketPriceUsd/.test(html), "market prices are shown in USD and mapped to in-game credits");
 check(/function renderContainerPreviewItems\s*\(/.test(html) && /marketPriceLabel\(x\)/.test(html), "case contents display market prices for individual skins");
+check(/data-case-card=/.test(html) && /showContainerPreview\(card\.dataset\.caseCard\)/.test(html), "clicking a case card opens the contents-first details modal");
+check(/id="previewItems"/.test(html) && /Что может выпасть/.test(html) && /id="previewOpen"/.test(html), "case details show possible drops and an open button inside the modal");
+check(/containerCatalogStatus==="loading"/.test(html) && /renderContainerPreviewItems\(activePreviewContainerId\)/.test(html), "case contents refresh after the live catalog loads");
 
 check(/caseLab\.catalog\.cache\.v4/.test(html) && /priceByName\.get\(item\.name\)/.test(html), "cached catalog is refreshed and saved inventory prices are migrated");
 check(/id="loadMoreCases"/.test(html) && /caseVisibleCount=24/.test(html), "case feed renders in batches to reduce scrolling load");
