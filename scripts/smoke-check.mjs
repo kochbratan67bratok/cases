@@ -19,6 +19,7 @@ check(/function attemptUpgrade\s*\(/.test(html), "upgrade flow exists");
 check(/id="upgradeDial"/.test(html) && /id="upgradeDialNeedle"/.test(html), "CS2-style upgrade chance wheel exists");
 check(/data-upgrade-multiplier="1\.5"/.test(html) && /data-upgrade-multiplier="10"/.test(html), "upgrade multipliers x1 through x10 including x1.5 are available");
 check(/function catalogSkinPrice\s*\(/.test(html) && /function catalogCasePrice\s*\(/.test(html), "catalog skins and containers receive deterministic individual prices");
+check(/caseLab\.catalog\.cache\.v4/.test(html) && /priceByName\.get\(item\.name\)/.test(html), "cached catalog is refreshed and saved inventory prices are migrated");
 check(/id="loadMoreCases"/.test(html) && /caseVisibleCount=24/.test(html), "case feed renders in batches to reduce scrolling load");
 
 check(/function attemptContract\s*\(/.test(html), "contract flow exists");
