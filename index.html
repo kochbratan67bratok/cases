@@ -15,7 +15,35 @@
 
 .fullscreen-toggle{min-width:42px;min-height:42px;padding:6px 10px;font-size:22px;line-height:1}:focus-visible{outline:3px solid var(--orange-2)!important;outline-offset:3px}@media(min-width:1200px){.shell{max-width:1540px}.case-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.inventory-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.topbar{min-height:76px}.mainnav button,.account button{min-height:48px;font-size:14px}.page{padding-top:30px}.hero{min-height:340px}.panel{padding:22px}}@media(max-width:650px){.fullscreen-toggle{min-width:36px;min-height:36px;padding:4px 7px;font-size:19px}.account{gap:5px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-@keyframes goldPulse{0%,100%{box-shadow:0 0 0 rgba(255,190,60,0)}50%{box-shadow:0 0 42px rgba(255,190,60,.55)}}@keyframes rareFlash{0%{filter:brightness(1)}45%{filter:brightness(1.8)}100%{filter:brightness(1)}}#openingPanel.gold-drop{animation:goldPulse 1.2s ease-in-out 2;border-color:#f4c15d}#openingPanel.rare-drop{animation:rareFlash .8s ease-in-out 2}#openingPanel.gold-drop .result-art{filter:drop-shadow(0 0 22px rgba(255,190,60,.9))} .case-card,.skin-card{content-visibility:auto;contain-intrinsic-size:300px 330px;contain:layout paint style}.upgrade-source-picker-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);text-align:left;min-height:100px}.upgrade-source-picker-button #upgradeSourcePreview{display:flex;align-items:center;gap:14px;min-width:0}.upgrade-source-picker-button #upgradeSourcePreview img{width:104px;height:68px;object-fit:contain}.source-picker-plus{display:grid;place-items:center;width:68px;height:68px;border:1px dashed var(--line);border-radius:10px;font-size:30px;color:var(--accent)}.source-picker-chevron{font-size:22px;color:var(--muted)}.upgrade-inventory-picker{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.upgrade-inventory-picker[hidden]{display:none}.upgrade-inventory-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:340px;overflow:auto;margin-top:10px}.upgrade-inventory-option{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--bg)}.upgrade-inventory-option img{width:100%;height:72px;object-fit:contain}.upgrade-inventory-option span{font-size:11px;overflow-wrap:anywhere}.upgrade-target-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin-top:10px;max-height:390px;overflow:auto;overscroll-behavior:contain}.upgrade-target-option{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:6px;text-align:left;padding:8px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px}.upgrade-target-option.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.upgrade-target-option img{width:100%;height:76px;object-fit:contain}.upgrade-target-option .target-name{font-size:11px;line-height:1.25;min-height:28px}.upgrade-target-option .target-chance{font-size:11px;color:var(--accent);font-weight:800}@media(max-width:600px){.upgrade-target-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:330px}.upgrade-source-picker-button #upgradeSourcePreview img{width:82px;height:60px}}.case-art img,.skin-card img,.preview-item img{content-visibility:auto}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}} </style>
+@keyframes goldPulse{0%,100%{box-shadow:0 0 0 rgba(255,190,60,0)}50%{box-shadow:0 0 42px rgba(255,190,60,.55)}}@keyframes rareFlash{0%{filter:brightness(1)}45%{filter:brightness(1.8)}100%{filter:brightness(1)}}#openingPanel.gold-drop{animation:goldPulse 1.2s ease-in-out 2;border-color:#f4c15d}#openingPanel.rare-drop{animation:rareFlash .8s ease-in-out 2}#openingPanel.gold-drop .result-art{filter:drop-shadow(0 0 22px rgba(255,190,60,.9))} .case-card,.skin-card{content-visibility:auto;contain-intrinsic-size:300px 330px;contain:layout paint style}.upgrade-source-picker-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);text-align:left;min-height:100px}.upgrade-source-picker-button #upgradeSourcePreview{display:flex;align-items:center;gap:14px;min-width:0}.upgrade-source-picker-button #upgradeSourcePreview img{width:104px;height:68px;object-fit:contain}.source-picker-plus{display:grid;place-items:center;width:68px;height:68px;border:1px dashed var(--line);border-radius:10px;font-size:30px;color:var(--accent)}.source-picker-chevron{font-size:22px;color:var(--muted)}.upgrade-inventory-picker{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.upgrade-inventory-picker[hidden]{display:none}.upgrade-inventory-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:340px;overflow:auto;margin-top:10px}.upgrade-inventory-option{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--bg)}.upgrade-inventory-option img{width:100%;height:72px;object-fit:contain}.upgrade-inventory-option span{font-size:11px;overflow-wrap:anywhere}.upgrade-target-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin-top:10px;max-height:390px;overflow:auto;overscroll-behavior:contain}.upgrade-target-option{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:6px;text-align:left;padding:8px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px}.upgrade-target-option.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.upgrade-target-option img{width:100%;height:76px;object-fit:contain}.upgrade-target-option .target-name{font-size:11px;line-height:1.25;min-height:28px}.upgrade-target-option .target-chance{font-size:11px;color:var(--accent);font-weight:800}@media(max-width:600px){.upgrade-target-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:330px}.upgrade-source-picker-button #upgradeSourcePreview img{width:82px;height:60px}}.case-art img,.skin-card img,.preview-item img{content-visibility:auto}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}} 
+/* Desktop, mobile and TV/remote-control accessibility */
+:focus-visible{outline:3px solid var(--orange-2);outline-offset:3px}
+@media(min-width:1400px) and (min-height:800px){
+  body{font-size:15px}
+  .page{max-width:1480px;padding-left:28px;padding-right:28px}
+  .mainnav button,.account button,button{min-height:44px}
+  .case-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+  .skin-grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+}
+@media(max-width:900px){
+  .page{width:100%;padding-left:16px;padding-right:16px}
+  .topbar{gap:10px;flex-wrap:wrap}
+  .mainnav{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+  button,input,select{touch-action:manipulation}
+}
+@media(max-width:650px){
+  .page{padding:14px 12px calc(92px + env(safe-area-inset-bottom))}
+  .topbar{padding-left:12px;padding-right:12px}
+  .mainnav{position:fixed;z-index:50;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;gap:4px;padding:6px;border:1px solid var(--line);border-radius:14px;background:rgba(17,23,31,.96);backdrop-filter:blur(16px)}
+  .mainnav button{flex:1;min-width:0;padding:10px 4px;font-size:12px;white-space:nowrap}
+  input,select{max-width:100%;font-size:16px}
+}
+@media(hover:none){
+  button:hover{transform:none}
+  button:active{filter:brightness(1.12)}
+}
+
+</style>
 </head>
 <body>
 <div class="shell">
@@ -288,6 +316,29 @@ async function loadContainerCatalog(){
 }
 async function initYandex(){try{if(!window.YaGames)return;const sdk=await YaGames.init();window.ygSdk=sdk;try{sdk.features?.LoadingAPI?.ready()}catch(e){}try{cloudPlayer=await sdk.getPlayer({scopes:false});if(cloudPlayer?.getData){const cloud=await cloudPlayer.getData(["caseLabRebuildV1"]);const remote=cloud?.caseLabRebuildV1;if(remote&&typeof remote==="object"&&(!state.opens&&!state.inventory.length&&state.coins===1000)){state={...freshState(),...remote};save();renderAll()}}}catch(e){console.info("Cloud save unavailable",e)}try{if(sdk.adv?.getBannerAdvStatus&&sdk.adv?.showBannerAdv){const banner=await sdk.adv.getBannerAdvStatus();if(!banner.stickyAdvIsShowing)await sdk.adv.showBannerAdv()}}catch(e){console.info("Sticky banner unavailable",e)}}catch(e){console.info("Yandex Games SDK not available in this preview",e)}}
 const fullscreenToggle=document.getElementById("fullscreenToggle");if(fullscreenToggle)fullscreenToggle.addEventListener("click",async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen()}else{await document.exitFullscreen()}}catch(e){notify("Полноэкранный режим недоступен в этом браузере.")}});document.addEventListener("fullscreenchange",()=>{if(fullscreenToggle)fullscreenToggle.setAttribute("aria-label",document.fullscreenElement?"Выйти из полноэкранного режима":"Полноэкранный режим")});
+
+// TV/remote keyboard navigation: use arrow keys to move between visible interactive controls.
+document.addEventListener("keydown",e=>{
+ if(window.matchMedia("(min-width: 1100px)").matches && ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
+  const active=document.activeElement;
+  if(!(active instanceof HTMLElement) || !active.matches("button,[role=button],a[href],input,select"))return;
+  const candidates=[...document.querySelectorAll("button:not(:disabled),[role=button],a[href],input:not(:disabled),select:not(:disabled)")]
+   .filter(el=>el instanceof HTMLElement && el.offsetWidth>0 && el.offsetHeight>0 && el!==active);
+  const a=active.getBoundingClientRect(), ax=a.left+a.width/2, ay=a.top+a.height/2;
+  const dirs={"ArrowLeft":[-1,0],"ArrowRight":[1,0],"ArrowUp":[0,-1],"ArrowDown":[0,1]};
+  const [dx,dy]=dirs[e.key];
+  let best=null,bestScore=Infinity;
+  for(const el of candidates){
+   const r=el.getBoundingClientRect(), x=r.left+r.width/2-ax,y=r.top+r.height/2-ay;
+   const forward=x*dx+y*dy, lateral=Math.abs(x*dy-y*dx);
+   if(forward<=0)continue;
+   const score=forward+lateral*2.4;
+   if(score<bestScore){bestScore=score;best=el}
+  }
+  if(best){e.preventDefault();best.focus({preventScroll:true});best.scrollIntoView({block:"nearest",inline:"nearest",behavior:"auto"})}
+ }
+});
+
 document.addEventListener("click",e=>{const open=e.target.closest("[data-open-case]");if(open){openCase(open.dataset.openCase);return}const preview=e.target.closest("[data-preview-container]");if(preview){showContainerPreview(preview.dataset.previewContainer);return}});
 document.getElementById("contractSlots").addEventListener("click",()=>{if(contractSelection.length)notify("Нажми «Сбросить выбор», чтобы начать заново.")});document.getElementById("closePreview").addEventListener("click",()=>document.getElementById("previewModal").classList.add("hidden"));document.getElementById("previewModal").addEventListener("click",e=>{if(e.target.id==="previewModal")e.currentTarget.classList.add("hidden")});document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("previewModal").classList.add("hidden")});
 window.addEventListener("beforeunload",save);
