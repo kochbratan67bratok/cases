@@ -748,8 +748,8 @@ function resetCaseUnlockStage(c){
  key.style.setProperty("--key-x","50px");key.style.setProperty("--key-y","-18px");key.style.setProperty("--key-angle","24deg");key.style.opacity="1";
 }
 async function animateCaseUnlock(c){
- const stage=document.getElementById("caseUnlockStage"),lid=document.getElementById("caseUnlockLid"),key=document.getElementById("caseUnlockKey");
- if(!stage||!lid||!key)return;
+ const stage=document.getElementById("caseUnlockStage"),model=document.getElementById("caseUnlockModel"),lid=document.getElementById("caseUnlockLid"),key=document.getElementById("caseUnlockKey");
+ if(!stage||!model||!lid||!key){throw new Error("Case opening animation elements are missing");}
  const raf=typeof window.requestAnimationFrame==="function"?window.requestAnimationFrame.bind(window):callback=>setTimeout(()=>callback(Date.now()),16);
  const tween=(duration,draw)=>new Promise(resolve=>{
   let start=null;
