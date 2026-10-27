@@ -313,6 +313,29 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 .battle-tier.jackpot-tier .tier-reward-icon{color:#ffe5a1;border-color:#e4b95f88;background:radial-gradient(circle,#725526,#21190e 72%);box-shadow:0 0 24px #e4b95f20}
 .battle-tier.jackpot-tier .tier-number{color:#e4b95f}
 
+
+/* CS2-inspired key insertion, turn and case-lid reveal — weapon cases only */
+.case-unlock-stage{margin:0 0 14px;padding:14px 12px 10px;border:1px solid #ffffff12;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 32%,#263544 0%,#141c25 65%,#111820 100%)}
+.case-unlock-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:10px;letter-spacing:.13em;color:var(--muted);font-weight:900}
+.case-unlock-heading b{max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);letter-spacing:.06em}
+.case-unlock-scene{height:194px;position:relative;perspective:680px;isolation:isolate}
+.case-unlock-aura{position:absolute;left:50%;top:48%;width:min(330px,90%);height:140px;transform:translate(-50%,-50%);background:radial-gradient(ellipse,#f29b3830 0%,#f29b380c 42%,transparent 72%);pointer-events:none}
+.case-unlock-model{--case-theme:#b78a56;position:absolute;z-index:2;width:190px;height:104px;left:50%;bottom:17px;transform:translateX(-50%) rotateX(7deg) rotateY(-7deg);transform-style:preserve-3d;filter:drop-shadow(0 17px 13px #0008)}
+.case-crate-base{position:absolute;left:0;bottom:0;width:100%;height:82px;border:1px solid #ffffff37;border-radius:7px 7px 9px 9px;background:linear-gradient(145deg,var(--case-theme),#202b36 85%);box-shadow:inset 0 1px #ffffff55,inset 0 -8px 0 #0002;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.case-crate-base:before,.case-crate-base:after{content:"";position:absolute;top:0;bottom:0;width:9px;background:#0b1118a8;border-left:1px solid #ffffff30;border-right:1px solid #0008}
+.case-crate-base:before{left:17px}.case-crate-base:after{right:17px}
+.case-crate-brand{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:8px;letter-spacing:.22em;font-weight:1000;color:#fff9;text-shadow:0 1px 2px #000}
+.case-crate-emblem{display:grid;place-items:center;width:48px;height:44px;margin-top:10px;border:2px solid #eef2f733;background:#1019237d;color:#f5f7fa;font-size:31px;font-weight:900;text-shadow:0 2px 7px #000}
+.case-crate-lock{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:22px;height:9px;border:1px solid #f5d39c88;border-bottom:0;border-radius:5px 5px 0 0;background:#a7b0b8}
+.case-crate-lid{position:absolute;z-index:3;left:-1px;top:-1px;width:calc(100% + 2px);height:29px;transform-origin:50% 100%;transform:rotateX(var(--lid-angle,0deg));backface-visibility:visible;border:1px solid #ffffff4a;border-radius:7px 7px 3px 3px;background:linear-gradient(155deg,var(--case-theme),#202b36);box-shadow:inset 0 2px #ffffff55,inset 0 -4px #0002;display:grid;place-items:center}
+.case-crate-lid:after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:2px;background:#141a20a6}
+.case-crate-lid-label{font-size:7px;letter-spacing:.3em;font-weight:1000;color:#fff9}
+.case-unlock-key{position:absolute;z-index:4;left:calc(50% - 1px);top:61%;width:112px;height:36px;color:#f5d08b;filter:drop-shadow(0 2px 4px #000c);transform-origin:87% 50%;transform:translate3d(var(--key-x,50px),var(--key-y,-18px),0) rotate(var(--key-angle,24deg))}
+.case-unlock-key svg{display:block;width:100%;height:100%;overflow:visible}
+.case-unlock-status{text-align:center;min-height:15px;padding-top:4px;color:#f2bd69;font-size:9px;font-weight:900;letter-spacing:.17em}
+.case-unlock-stage.is-unlocked .case-unlock-aura{background:radial-gradient(ellipse,#f29b3855 0%,#f29b3814 45%,transparent 72%)}
+.case-unlock-stage.is-unlocked .case-unlock-key{opacity:.28;transition:opacity .2s}
+@media(max-width:650px){.case-unlock-stage{padding:12px 8px 9px}.case-unlock-scene{height:176px}.case-unlock-model{width:172px;height:96px;bottom:14px}.case-crate-base{height:76px}.case-unlock-key{top:60%;width:102px}.case-unlock-heading{font-size:9px}}
 </style>
 </head>
 <body>
@@ -341,7 +364,19 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 <section class="page" id="page-cases">
 <div class="page-heading"><div><div class="eyebrow">CASE COLLECTION</div><h1>Выбери кейс</h1><p>Каждый кейс — свой пул предметов и цена открытия.</p></div><div class="muted tiny">Виртуальные кредиты · без реальных ставок</div></div>
 <div class="section-title"><h2>Оружейные кейсы</h2><span class="muted tiny">Посмотри дропы перед открытием</span></div><div class="case-grid" id="allCases"></div><button type="button" id="loadMoreCases" class="case-load-more quiet hidden">Показать ещё кейсы</button><div class="section-title"><h2>Капсулы и наборы</h2><span class="muted tiny">Стикеры, автографы, нашивки и брелоки</span></div><div class="case-grid" id="allCapsules"></div><button type="button" id="loadMoreCapsules" class="case-load-more quiet hidden">Показать ещё капсулы и наборы</button>
-<div class="roulette-box hidden" id="openingPanel"><div class="roulette-head"><span id="rouletteCaseName">CASE OPENING</span><span>РЕЗУЛЬТАТ СЛЕВА НАПРАВО</span></div><div class="roulette-window"><div class="roulette-track" id="rouletteTrack"></div></div><div class="loading-note" id="rouletteStatus">Открываем кейс…</div><div id="openResult" class="result-card hidden" aria-live="polite"></div></div>
+<div class="roulette-box hidden" id="openingPanel"><div class="roulette-head"><span id="rouletteCaseName">CASE OPENING</span><span>РЕЗУЛЬТАТ СЛЕВА НАПРАВО</span></div>
+<div class="case-unlock-stage hidden" id="caseUnlockStage" aria-live="polite">
+ <div class="case-unlock-heading"><span>UNLOCK CONTAINER</span><b id="caseUnlockCaseName">CASE</b></div>
+ <div class="case-unlock-scene"><div class="case-unlock-aura"></div>
+  <div class="case-unlock-model" id="caseUnlockModel">
+   <div class="case-crate-lid" id="caseUnlockLid"><span class="case-crate-lid-label">CASE LAB</span></div>
+   <div class="case-crate-base"><span class="case-crate-brand">CASE LAB</span><span class="case-crate-emblem" id="caseUnlockGlyph">▧</span><span class="case-crate-lock"></span></div>
+  </div>
+  <div class="case-unlock-key" id="caseUnlockKey" aria-hidden="true"><svg viewBox="0 0 128 40" role="presentation"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 20H97"/><path d="M27 20v10h9V20M48 20v8h9v-8"/><circle cx="108" cy="20" r="10"/></g></svg></div>
+ </div>
+ <div class="case-unlock-status" id="caseUnlockStatus">ПОДГОТОВКА К ОТКРЫТИЮ</div>
+</div>
+<div class="roulette-window"><div class="roulette-track" id="rouletteTrack"></div></div><div class="loading-note" id="rouletteStatus">Открываем кейс…</div><div id="openResult" class="result-card hidden" aria-live="polite"></div></div>
 </section>
 <section class="page" id="page-inventory">
 <div class="page-heading"><div><div class="eyebrow">YOUR COLLECTION</div><h1>Инвентарь</h1><p><span id="inventoryCount">0 предметов</span> · продавай дубликаты или собирай коллекцию.</p></div><button id="sellAllBtn" class="quiet">Продать всё</button></div>
@@ -560,20 +595,62 @@ function celebrateCaseLab(kind="rare"){
 function pulseDailyReward(button){if(!button)return;button.classList.remove("reward-pop");void button.offsetWidth;button.classList.add("reward-pop");setTimeout(()=>button.classList.remove("reward-pop"),650);celebrateCaseLab("rare")}
 function playSound(kind="tick"){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;const ctx=new Audio();activeAudioContexts.add(ctx);const t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=kind==="win"?"triangle":"sine";o.frequency.setValueAtTime(kind==="win"?560:kind==="rare"?360:160,t);o.frequency.exponentialRampToValueAtTime(kind==="win"?960:70,t+.12);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(kind==="win"?.08:.025,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+.16);o.start(t);o.stop(t+.17);setTimeout(()=>{activeAudioContexts.delete(ctx);ctx.close().catch(()=>{})},300)}catch(e){}}
 function rouletteTile(s){return '<div class="roulette-tile" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#b0c3d9")+'">'+skinImage(s)+'<span>'+escapeHtml(s.name)+'</span><small>'+(s.marketPriceUsd>0?"$"+Number(s.marketPriceUsd).toFixed(2):money(s.value)+" CR")+'</small></div>'}
+function resetCaseUnlockStage(c){
+ const stage=document.getElementById("caseUnlockStage"),model=document.getElementById("caseUnlockModel"),lid=document.getElementById("caseUnlockLid"),key=document.getElementById("caseUnlockKey");
+ if(!stage||!model||!lid||!key)return;
+ stage.classList.remove("hidden","is-unlocked");
+ stage.style.setProperty("--case-theme",c.theme||"#b78a56");
+ document.getElementById("caseUnlockCaseName").textContent=c.name||"CASE";
+ document.getElementById("caseUnlockGlyph").textContent=c.glyph||"▧";
+ document.getElementById("caseUnlockStatus").textContent="ПОДГОТОВКА К ОТКРЫТИЮ";
+ model.style.setProperty("--case-theme",c.theme||"#b78a56");
+ lid.style.setProperty("--lid-angle","0deg");
+ key.style.setProperty("--key-x","50px");key.style.setProperty("--key-y","-18px");key.style.setProperty("--key-angle","24deg");key.style.opacity="1";
+}
+async function animateCaseUnlock(c){
+ const stage=document.getElementById("caseUnlockStage"),lid=document.getElementById("caseUnlockLid"),key=document.getElementById("caseUnlockKey");
+ if(!stage||!lid||!key)return;
+ const raf=typeof window.requestAnimationFrame==="function"?window.requestAnimationFrame.bind(window):callback=>setTimeout(()=>callback(Date.now()),16);
+ const tween=(duration,draw)=>new Promise(resolve=>{
+  let start=null;
+  const frame=stamp=>{
+   const now=Number.isFinite(stamp)?stamp:Date.now();
+   if(start===null)start=now;
+   const p=Math.min(1,Math.max(0,(now-start)/duration));
+   draw(p);
+   if(p<1)raf(frame);else resolve();
+  };
+  raf(frame);
+ });
+ const easeOut=p=>1-Math.pow(1-p,3);
+ const status=document.getElementById("caseUnlockStatus");
+ stage.classList.remove("hidden","is-unlocked");
+ status.textContent="ВСТАВЛЯЕМ КЛЮЧ";
+ await tween(540,p=>{const e=easeOut(p);key.style.setProperty("--key-x",(50*(1-e))+"px");key.style.setProperty("--key-y",(-18*(1-e))+"px");key.style.setProperty("--key-angle",(24*(1-e))+"deg")});
+ status.textContent="ПОВОРАЧИВАЕМ КЛЮЧ";playSound("tick");
+ await tween(620,p=>{key.style.setProperty("--key-angle",(82*easeOut(p))+"deg")});
+ status.textContent="ЗАМОК ОТКРЫТ";playSound("tick");
+ await tween(760,p=>{const e=easeOut(p);lid.style.setProperty("--lid-angle",(-108*e)+"deg");key.style.setProperty("--key-angle",(82+14*e)+"deg");key.style.setProperty("--key-x",(-6*e)+"px")});
+ stage.classList.add("is-unlocked");key.style.opacity=".25";
+ status.textContent="КЕЙС ОТКРЫТ · ПРОВЕРЯЕМ ДРОП";
+ await new Promise(resolve=>setTimeout(resolve,180));
+}
 async function openCase(id){
  const c=CASES.find(x=>x.id===id)||CAPSULES.find(x=>x.id===id);
  if(!c||opening)return;
  if(state.coins<c.price&&state.freeOpens<1){notify("Не хватает кредитов. Забери ежедневный бонус, продай скин или получи бесплатное открытие.");return}
+ const isWeaponCase=CASES.some(x=>x.id===id);
  opening=true;
- const panel=document.getElementById("openingPanel"),track=document.getElementById("rouletteTrack"),windowEl=document.querySelector(".roulette-window"),result=document.getElementById("openResult");
- if(!panel||!track||!windowEl||!result){opening=false;console.error("Case opening panel is missing");notify("Не удалось открыть рулетку: элементы интерфейса не найдены.");return}
- let tickTimer=null,charged=false,prize=null;
+ const panel=document.getElementById("openingPanel"),track=document.getElementById("rouletteTrack"),windowEl=document.querySelector("#openingPanel .roulette-window"),result=document.getElementById("openResult"),unlockStage=document.getElementById("caseUnlockStage");
+ if(!panel||!track||!windowEl||!result||(isWeaponCase&&!unlockStage)){opening=false;console.error("Case opening panel is missing");notify("Не удалось открыть рулетку: элементы интерфейса не найдены.");return}
+ let tickTimer=null,charged=false,prize=null,finished=false;
  try{
   document.getElementById("rouletteCaseName").textContent=c.name.toUpperCase()+" / OPENING";
   document.getElementById("rouletteStatus").textContent="Подготавливаем открытие…";
   result.classList.add("hidden");
   panel.classList.remove("hidden","gold-drop","rare-drop");
   panel.classList.add("is-opening");
+  if(isWeaponCase)resetCaseUnlockStage(c);else if(unlockStage)unlockStage.classList.add("hidden");
   panel.scrollIntoView({behavior:"auto",block:"center"});
   // Price refresh must never prevent the opening screen from appearing. Wait briefly, then continue with cached prices.
   try{await Promise.race([refreshMarketPricesForContainer(id),new Promise(resolve=>setTimeout(resolve,1400))])}catch(error){console.warn("Market refresh skipped for opening",error)}
@@ -582,6 +659,7 @@ async function openCase(id){
   if(!prize||!prize.name)throw new Error("Не удалось выбрать предмет из каталога кейса");
   if(state.coins<c.price&&state.freeOpens<1){notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}
   if(state.freeOpens>0)state.freeOpens--;else state.coins-=c.price;state.opens++;charged=true;
+  if(isWeaponCase)await animateCaseUnlock(c);
   const fallbackPrize=prize;
   const strip=Array.from({length:54},()=>{try{const item=pickSkin(id);return item&&item.name?item:fallbackPrize}catch(error){return fallbackPrize}});
   strip[46]=prize;
@@ -629,6 +707,7 @@ async function openCase(id){
   result.innerHTML='<div class="result-art">'+skinImage(prize)+'</div><div style="min-width:0;flex:1"><div class="eyebrow">ПРЕДМЕТ ПОЛУЧЕН</div><div class="result-title">'+escapeHtml(prize.name)+'</div><div class="rarity-label" style="--rarity-color:'+(RARITY[prize.rarity]?.color||"#fff")+'">'+escapeHtml(RARITY[prize.rarity]?.label||prize.rarity)+'</div><div class="result-value">◈ '+money(prize.value)+' CR</div><small class="market-price-muted">'+(prize.marketPriceUsd>0?marketPriceLabel(prize):"Рыночная цена не найдена")+'</small></div><button data-result-inventory>В инвентарь</button>';
   result.classList.remove("hidden");if(rarityRank(prize.rarity)>=4||itemType(prize)==="knife"||itemType(prize)==="gloves")celebrateCaseLab(itemType(prize)==="knife"||itemType(prize)==="gloves"?"gold":"rare");result.querySelector("[data-result-inventory]").addEventListener("click",()=>go("inventory"));
   document.getElementById("rouletteStatus").textContent="Готово · +18 XP";
+  finished=true;
   result.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
  }catch(error){
   console.error("Case opening error:",error?.message||error,error?.stack||"");
@@ -637,6 +716,7 @@ async function openCase(id){
   notify(charged?"Предмет сохранён в инвентарь. Анимация прервалась — попробуй ещё раз.":"Не удалось начать открытие. Кредиты не списаны.");
  }finally{
   if(tickTimer)clearInterval(tickTimer);
+  if(isWeaponCase&&!finished&&unlockStage){unlockStage.classList.add("hidden");unlockStage.classList.remove("is-unlocked");}
   panel.classList.remove("is-opening");opening=false;renderAll();
  }
 }
