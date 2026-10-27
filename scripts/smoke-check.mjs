@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import assert from "node:assert/strict";
+import vm from "node:vm";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
@@ -40,5 +41,27 @@ for (const [index, match] of inlineScripts.entries()) {
   );
   console.log(`✓ inline script ${index + 1} has valid JavaScript syntax`);
 }
+
+const stateBlock = html.match(/function freshState\\([\\s\\S]*?let state=loadState\\(\\);/);
+assert.ok(stateBlock, "state initialization block can be isolated for logic tests");
+const sandbox = { localStorage: { getItem: () => null } };
+sandbox.globalThis = sandbox;
+vm.runInNewContext(stateBlock[0] + "\\nglobalThis.__normalizeState = normalizeState;", sandbox);
+const normalizeState = sandbox.__normalizeState;
+const normalized = normalizeState({
+  coins: -20,
+  xp: "invalid",
+  opens: 4,
+  inventory: [null, { uid: "broken" }, { uid: "ok", name: "Test item", value: "45" }],
+  claimedPass: [1, 1, 31, "2"],
+  missionClaims: ["open3", 7, "open3"],
+});
+assert.equal(normalized.coins, 0, "negative credits are clamped");
+assert.equal(normalized.xp, 0, "invalid XP falls back safely");
+assert.equal(normalized.inventory.length, 1, "malformed inventory entries are discarded");
+assert.equal(normalized.inventory[0].value, 45, "inventory values are normalized to numbers");
+assert.deepEqual(Array.from(normalized.claimedPass), [1], "battle-pass claims are deduplicated and bounded");
+assert.deepEqual(Array.from(normalized.missionClaims), ["open3"], "mission claims are deduplicated and type-checked");
+console.log("✓ saved-state normalization logic tests passed");
 
 console.log("\nStatic smoke checks passed. These checks do not replace browser or Yandex Games SDK testing.");
