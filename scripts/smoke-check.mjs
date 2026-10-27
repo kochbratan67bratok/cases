@@ -17,6 +17,8 @@ check(/function openCase\s*\(/.test(html), "case-opening flow exists");
 check(/function renderInventory\s*\(/.test(html), "inventory renderer exists");
 check(/function attemptUpgrade\s*\(/.test(html), "upgrade flow exists");
 check(/id="upgradeDial"/.test(html) && /id="upgradeDialNeedle"/.test(html), "CS2-style upgrade chance wheel exists");
+check(/function upgradeSkinImage\s*\(/.test(html) && /nextElementSibling\.hidden=false/.test(html), "upgrader skin thumbnails show a fallback instead of becoming blank when an image fails");
+check(/#page-upgrade \.upgrade-slot \.skin-art/.test(html) && /#page-upgrade \.upgrade-target-option \.skin-art/.test(html), "upgrader source, target, and picker thumbnails have stable aligned image frames");
 check(/data-upgrade-multiplier="1\.5"/.test(html) && /data-upgrade-multiplier="10"/.test(html), "upgrade multipliers x1 through x10 including x1.5 are available");
 check(/function catalogSkinPrice\s*\(/.test(html) && /function catalogCasePrice\s*\(/.test(html), "catalog skins and containers receive deterministic individual prices");
 check(/function refreshMarketPricesForContainer\s*\(/.test(html) && /api\.openskin\.dev\/v1\/prices\/batch/.test(html), "case contents can load live CS2 market prices from a batched price API");
