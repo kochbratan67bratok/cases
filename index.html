@@ -47,7 +47,7 @@
 /* CASE LAB performance and upgrade wheel */
 .case-load-more{grid-column:1/-1;display:block;width:100%;margin:8px 0 18px}
 .case-card img{content-visibility:auto}
-.upgrade-dial{width:72px;height:72px;margin:auto;position:relative;border-radius:50%;background:conic-gradient(from 0deg,var(--green) 0deg var(--chance-angle,126deg),var(--red) var(--chance-angle,126deg) 360deg);box-shadow:0 0 0 5px #ffffff08,0 5px 20px #0005}
+.upgrade-dial{width:100px;height:100px;margin:8px auto;position:relative;border-radius:50%;background:conic-gradient(from 0deg,var(--green) 0deg var(--chance-angle,126deg),var(--red) var(--chance-angle,126deg) 360deg);box-shadow:0 0 0 6px #ffffff0a,0 0 24px #5ed4a025,0 5px 20px #0005;isolation:isolate}
 .upgrade-dial:before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--surface);border:1px solid #ffffff20}
 .upgrade-dial-needle{position:absolute;z-index:2;left:calc(50% - 1px);top:3px;width:2px;height:33px;background:#fff;border-radius:2px;transform-origin:50% 33px;transform:rotate(0deg);transition:transform 1.25s cubic-bezier(.12,.72,.12,1);box-shadow:0 0 7px #fff8}
 .upgrade-dial-center{position:absolute;z-index:3;left:50%;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);background:#e8eef5;border:3px solid #354252}
@@ -58,7 +58,7 @@
 .upgrade-outcome{display:none;margin-top:12px;padding:11px 13px;border-radius:9px;font-weight:900;text-align:center}
 .upgrade-outcome.success{display:block;color:var(--green);border:1px solid #5ed4a055;background:#5ed4a012}
 .upgrade-outcome.failure{display:block;color:var(--red);border:1px solid #f8717155;background:#f8717112}
-@media(max-width:650px){.upgrade-dial{width:58px;height:58px}.upgrade-dial:before{inset:7px}.upgrade-dial-needle{height:26px;transform-origin:50% 26px}.upgrade-dial-center{width:10px;height:10px}.upgrade-multipliers{gap:5px}.upgrade-multipliers button{flex-basis:42px}}
+@media(max-width:650px){.upgrade-dial{width:82px;height:82px}.upgrade-dial:before{inset:7px}.upgrade-dial-needle{height:26px;transform-origin:50% 26px}.upgrade-dial-center{width:10px;height:10px}.upgrade-multipliers{gap:5px}.upgrade-multipliers button{flex-basis:42px}}
 @media(prefers-reduced-motion:reduce){.upgrade-dial-needle{transition:none!important}}
  .market-price{display:block;color:var(--green);font-size:11px;font-weight:800;margin-top:3px}.market-price-muted{display:block;color:var(--muted);font-size:10px;margin-top:3px}
 /* CASE LAB opening polish: tactile case reveal, roulette motion, and winner reveal */
@@ -579,15 +579,20 @@ async function openCase(id){
   if(state.coins<c.price){notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}
   if(state.freeOpens>0)state.freeOpens--;else state.coins-=c.price;state.opens++;charged=true;prize=pickSkin(id);
   const strip=Array.from({length:42},()=>pickSkin(id));strip[34]=prize;
-  track.style.transition="none";track.style.transform="translateX(0)";track.innerHTML=strip.map(rouletteTile).join("");
+  // Build and paint the roulette before starting the animation (more reliable on mobile browsers).
+  track.style.transition="none";
+  track.style.transform="translate3d(0,0,0)";
+  track.innerHTML=strip.map(rouletteTile).join("");
   document.getElementById("rouletteStatus").textContent="Крутим рулетку…";
+  panel.scrollIntoView({behavior:"auto",block:"center"});
   track.getBoundingClientRect();
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   const targetTile=track.children[34];
-  const target=targetTile.offsetLeft+targetTile.offsetWidth/2-windowEl.clientWidth/2;
-  track.style.transition="transform 4.6s cubic-bezier(.08,.72,.08,1)";
-  requestAnimationFrame(()=>{track.style.transform="translateX(-"+Math.max(0,target)+"px)"});
+  const target=Math.max(0,targetTile.offsetLeft+targetTile.offsetWidth/2-windowEl.getBoundingClientRect().width/2);
+  track.style.transition="transform 5.4s cubic-bezier(.08,.72,.12,1)";
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{track.style.transform="translate3d(-"+target+"px,0,0)"}));
   playSound("tick");tickTimer=setInterval(()=>playSound("tick"),220);
-  await new Promise(resolve=>setTimeout(resolve,4700));
+  await new Promise(resolve=>setTimeout(resolve,5550));
   if(tickTimer){clearInterval(tickTimer);tickTimer=null}
   playSound(rarityRank(prize.rarity)>=4?"win":"rare");panel.classList.remove("is-opening");
   if(!state.inventory.some(x=>x.uid===prize.uid))state.inventory.unshift(prize);
