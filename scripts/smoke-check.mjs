@@ -17,6 +17,8 @@ check(/function renderInventory\s*\(/.test(html), "inventory renderer exists");
 check(/function attemptUpgrade\s*\(/.test(html), "upgrade flow exists");
 check(/function attemptContract\s*\(/.test(html), "contract flow exists");
 check(/function initYandex\s*\(/.test(html), "Yandex Games SDK initialization exists");
+check(/game_api_pause/.test(html) && /game_api_resume/.test(html), "Yandex Games pause/resume events are handled");
+check(/function stopAllSounds\s*\(/.test(html), "audio can be stopped when the game loses focus");
 check(/function save\s*\(/.test(html) && /function loadState\s*\(/.test(html), "save/load functions exist");
 check(/localStorage/.test(html), "local persistence is implemented");
 check(/state\.coins===freshState\(\)\.coins/.test(html), "cloud save restore matches the actual fresh-state balance");
