@@ -1,33 +1,44 @@
-# Case Lab — CS2 Simulator
+# Case Lab — HTML5 / Yandex Games prototype
 
-This repository is migrating to [Rarmash/CS2-Simulator](https://github.com/Rarmash/CS2-Simulator) as the main Flutter application, while keeping the existing Case Lab implementation available at the repository root as a reference for features to port back.
+Standalone browser-first prototype based on the CS2 Simulator concept. The existing Flutter app is untouched; this version lives in `html5/` so it can be developed and tested independently.
 
-## Current app base
+## Included mechanics
 
-The upstream Flutter app is tracked as a Git submodule at `vendor/CS2-Simulator`, pinned to a specific commit. GitHub Actions builds and tests that app.
+- Three virtual cases with rarity-weighted drops.
+- Virtual credits, inventory, item valuation and selling.
+- Daily virtual-credit reward.
+- Five-item upgrade contract.
+- Local progress save with `localStorage`.
+- Optional Yandex Games cloud save when SDK/player APIs are available.
+- Rewarded-video integration: grants +150 virtual credits only in the SDK's `onRewarded` callback.
+- Responsive layout for desktop and mobile.
 
-Initialize the source after cloning:
+## Run locally
 
-```sh
-git submodule update --init --recursive
-cd vendor/CS2-Simulator
-flutter pub get
-flutter run
+The SDK is loaded from `/sdk.js`, as recommended for games uploaded to Yandex Games. For local testing that path will not resolve unless the Yandex development proxy/preview is used. The game is designed to continue in standalone mode without the SDK.
+
+From the repository root, serve the folder with any static HTTP server, for example:
+
+```bash
+python3 -m http.server 8080 --directory html5
 ```
 
-## Android release build
+Open `http://localhost:8080`.
 
-```sh
-cd vendor/CS2-Simulator
-flutter build apk --release
-```
+## Yandex Games publication checklist
 
-The APK artifact is uploaded by GitHub Actions after a successful build.
+1. Create a game draft in the Yandex Games Developer Console.
+2. Upload the contents of `html5/` as a ZIP archive (the entry point is `index.html`).
+3. Confirm SDK initialization in the platform debug panel.
+4. Enable/configure monetization in the Developer Console.
+5. Test rewarded ads, cloud saves, pause/resume, mobile layout and moderation requirements.
+6. Replace placeholder emoji art with original/licensed assets before release.
 
-## Features to port back
+Official documentation:
+- SDK: https://yandex.ru/dev/games/doc/ru/sdk
+- SDK connection: https://yandex.ru/dev/games/doc/ru/sdk/sdk-about
+- Ads: https://yandex.ru/dev/games/doc/ru/sdk/sdk-adv
 
-The previous Case Lab implementation is retained in the repository root during migration. Its unique features—especially bot duels, Battle Pass, missions, and its upgrade flow—must be ported and tested against the new app architecture before the old implementation is removed.
+## Important
 
-## Licensing and third-party assets
-
-The upstream source code is licensed under AGPL-3.0. Keep the upstream license and copyright notices, and comply with source-sharing requirements when distributing modified builds. The upstream project explicitly notes that its license does not automatically grant rights to third-party CS/CS2 game assets, trademarks, or externally sourced content. See `vendor/CS2-Simulator/LICENSE` and the upstream README.
+This is a prototype, not a published game. Ads do not show locally unless the platform SDK is initialized in an eligible Yandex Games environment. Credits and items are virtual only; there are no real-money purchases, trading or cash-outs. No revenue is guaranteed.

@@ -1,4 +1,0 @@
-[submodule "vendor/CS2-Simulator"]
-	path = vendor/CS2-Simulator
-	url = https://github.com/Rarmash/CS2-Simulator.git
-	branch = master
