@@ -130,7 +130,7 @@
 <footer class="footer"><span>CASE LAB — фанатский симулятор. Не связан с Valve.</span><span>Виртуальные предметы и кредиты не имеют денежной стоимости.</span></footer>
 </div>
 <nav class="bottom-nav" id="bottomNav" aria-label="Мобильная навигация"><button class="active" data-page="home"><span>⌂</span>Главная</button><button data-page="cases"><span>▣</span>Кейсы</button><button data-page="inventory"><span>▤</span>Скины</button><button data-page="pass"><span>★</span>Пропуск</button><button data-page="upgrade"><span>⇧</span>Апгрейд</button></nav>
-<div id="toast" class="toast hidden" role="status" aria-live="polite"></div><div id="previewModal" class="preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-dialog"><div class="preview-head"><div><div class="eyebrow" id="previewType">CONTENTS</div><h2 id="previewTitle">Содержимое</h2><p id="previewDesc" class="muted tiny"></p></div><button id="closePreview" aria-label="Закрыть">✕</button></div><div id="previewOdds" class="preview-odds"></div><p id="previewCatalogNote" class="preview-catalog-note"></p><div id="previewItems" class="preview-items"></div><div class="preview-footer"><span class="muted tiny">Виртуальные предметы и шансы симулятора.</span><button id="previewOpen" class="primary">Открыть</button></div></div></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div><div id="previewModal" class="preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-dialog"><div class="preview-head"><div><div class="eyebrow" id="previewType">CONTENTS</div><h2 id="previewTitle">Содержимое</h2><p id="previewDesc" class="muted tiny"></p></div><button id="closePreview" aria-label="Закрыть">✕</button></div><div id="previewOdds" class="preview-odds"></div><h3 class="preview-section-title">Что может выпасть</h3><p id="previewCatalogNote" class="preview-catalog-note"></p><div id="previewItems" class="preview-items"></div><div class="preview-footer"><span class="muted tiny">Виртуальные предметы и шансы симулятора.</span><button id="previewOpen" class="primary">Открыть</button></div></div></div>
 <script>
 "use strict";
 const STORAGE_KEY="caseLab.rebuild.v1";
@@ -288,7 +288,7 @@ function marketVariantDetails(item){const wears=Array.isArray(item.marketWearPri
 function renderContainerPreviewItems(id){
  const c=CASES.find(x=>x.id===id)||CAPSULES.find(x=>x.id===id);if(!c)return;const actual=CONTAINER_LOOT[id],isCapsule=CAPSULES.some(x=>x.id===id);
  let list;if(actual){list=[...(actual.common||[]),...(actual.rare||[])];}else if(isCapsule)list=STICKERS.filter(x=>c.kind==="capsule"?x.type==="sticker":x.type===c.kind);else list=SKINS.filter(x=>itemType(x)==="weapon").sort((a,b)=>rarityRank(a.rarity)-rarityRank(b.rarity)).slice(0,48).concat(SPECIALS);
- const note=document.getElementById("previewCatalogNote");if(note){note.textContent=actual?"Полный список предметов из каталога · "+list.length+" предметов":(containerCatalogStatus==="online"?"Для этого кейса каталог не вернул список предметов. Ниже показаны доступные примеры.":"Загружаем каталог содержимого кейсов… Пока показаны примеры скинов.");note.classList.toggle("hidden",!!actual)}
+ const note=document.getElementById("previewCatalogNote");if(note){note.textContent=actual?"Полный список предметов из каталога · "+list.length+" предметов":(containerCatalogStatus==="loading"?"Загружаем каталог содержимого кейсов… Пока показаны примеры скинов.":containerCatalogStatus==="online"?"Для этого кейса каталог не вернул список предметов. Ниже показаны доступные примеры.":"Каталог содержимого недоступен. Ниже показаны примеры, это не полный список дропа.");note.classList.toggle("hidden",!!actual)}
  document.getElementById("previewItems").innerHTML=list.map(x=>'<div class="preview-item" style="--rarity-color:'+(RARITY[x.rarity]?.color||"#b0c3d9")+'">'+skinImage(x)+'<strong>'+escapeHtml(x.name)+'</strong><small>'+escapeHtml(RARITY[x.rarity]?.label||x.type||"Item")+' · '+money(x.value)+' CR</small><span class="'+(x.marketPriceUsd>0?"market-price":"market-price-muted")+'">'+(x.marketPriceUsd>0?marketPriceLabel(x):"Рыночная цена не загружена")+'</span>'+marketVariantDetails(x)+'</div>').join("");
 }
 function showContainerPreview(id){
@@ -425,7 +425,7 @@ async function loadSkinCatalog(){
  }catch(error){catalogStatus="fallback";SKINS=SKINS.map(item=>({...item,value:catalogSkinPrice(item.name,item.rarity,itemType(item)==="knife"||itemType(item)==="gloves",itemType(item))}));const priceByName=new Map(SKINS.map(s=>[s.name,s]));state.inventory=state.inventory.map(item=>{const catalog=priceByName.get(item.name);return catalog?{...item,value:catalog.value}:item});save();renderAll();console.info("Using built-in skin catalog with distinct prices",error)}
 }
 async function loadContainerCatalog(){
- const cacheKey="caseLab.container.catalog.v3";
+ containerCatalogStatus="loading";const cacheKey="caseLab.container.catalog.v3";
  try{
   let rows=null;try{const cached=JSON.parse(localStorage.getItem(cacheKey)||"null");if(cached&&cached.time>Date.now()-7*86400000&&Array.isArray(cached.rows))rows=cached.rows}catch(e){}
   if(!rows){const response=await fetch("https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/crates.json",{cache:"force-cache"});if(!response.ok)throw new Error("Crate catalog HTTP "+response.status);rows=await response.json();try{localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),rows}))}catch(e){}}
@@ -442,7 +442,7 @@ async function loadContainerCatalog(){
    if(common.length||rare.length)CONTAINER_LOOT[container.id]={common:common.length?common:rare,rare,sourceName:row.name};
    if(row.image&&!container.image)container.image=row.image;
   }
-  containerCatalogStatus="online";renderCases();console.info("Container catalog loaded",rows.length,"rows; additions",added,"existing matched",skippedExisting,"cases",CASES.length,"capsules and packs",CAPSULES.length)
+  containerCatalogStatus="online";renderCases();if(activePreviewContainerId){const actual=CONTAINER_LOOT[activePreviewContainerId];document.getElementById("previewDesc").textContent=(CASES.find(x=>x.id===activePreviewContainerId)||CAPSULES.find(x=>x.id===activePreviewContainerId))?.desc||"";const isCapsule=CAPSULES.some(x=>x.id===activePreviewContainerId);const odds=actual?containerOdds(activePreviewContainerId,isCapsule):[];document.getElementById("previewOdds").innerHTML=odds.filter(x=>x[1]>0).map(x=>'<span class="odds-chip">'+x[0]+": <b>"+x[1]+"%</b></span>").join("");renderContainerPreviewItems(activePreviewContainerId)}console.info("Container catalog loaded",rows.length,"rows; additions",added,"existing matched",skippedExisting,"cases",CASES.length,"capsules and packs",CAPSULES.length)
  }catch(e){containerCatalogStatus="fallback";console.info("Using fallback container catalog",e)}
 }
 function setGameplayRunning(running){const api=window.ygSdk?.features?.GameplayAPI;if(!api)return;try{if(running){api.start?.()}else{api.stop?.()}}catch(e){console.info("Gameplay state update unavailable",e)}}
