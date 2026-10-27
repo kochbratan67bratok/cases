@@ -363,6 +363,18 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 .case-opening-close{flex:0 0 auto;border-color:#647386;background:#202a36;padding:7px 10px;font-size:12px}
 @media(max-width:650px){.case-opening-overlay{padding:8px;align-items:center}.case-opening-overlay #openingPanel{max-height:calc(100dvh - 16px);padding:10px}.case-opening-close{padding:6px 8px}}
 
+
+/* Container-specific opening identity: cases, sticker capsules, graffiti and accessory packs. */
+#openingPanel.container-case .case-unlock-aura{background:radial-gradient(ellipse,rgba(101,121,140,.38),transparent 68%)}
+#openingPanel.container-capsule .case-unlock-aura{background:radial-gradient(ellipse,rgba(210,173,98,.48),transparent 68%)}
+#openingPanel.container-graffiti .case-unlock-aura{background:radial-gradient(ellipse,rgba(244,114,182,.42),transparent 68%)}
+#openingPanel.container-patch .case-unlock-aura{background:radial-gradient(ellipse,rgba(91,192,160,.4),transparent 68%)}
+#openingPanel.container-charm .case-unlock-aura{background:radial-gradient(ellipse,rgba(155,132,255,.42),transparent 68%)}
+#openingPanel.container-collection .case-unlock-aura{background:radial-gradient(ellipse,rgba(101,164,224,.4),transparent 68%)}
+#openingPanel.container-graffiti .case-crate-emblem{font-size:44px;transform:rotate(-12deg)}
+#openingPanel.container-capsule .case-crate-emblem{font-size:40px}
+#openingPanel.container-graffiti .case-unlock-status{letter-spacing:.14em;color:#f5a5cf}
+#openingPanel.container-capsule .case-unlock-status{color:#e8cb86}
 </style>
 </head>
 <body>
@@ -639,7 +651,8 @@ function resetCaseUnlockStage(c){
  stage.style.setProperty("--case-theme",c.theme||"#b78a56");
  document.getElementById("caseUnlockCaseName").textContent=c.name||"CASE";
  document.getElementById("caseUnlockGlyph").textContent=c.glyph||"▧";
- document.getElementById("caseUnlockStatus").textContent="ПОДГОТОВКА К ОТКРЫТИЮ";
+ const kindLabel=c.kind==="graffiti"?"ГРАФФИТИ":c.kind==="capsule"?"КАПСУЛУ":c.kind==="patch"?"НАШИВКИ":c.kind==="charm"?"БРЕЛОКИ":c.kind==="collection"?"КОНТЕЙНЕР":"КЕЙС";
+ document.getElementById("caseUnlockStatus").textContent="ГОТОВИМ К ОТКРЫТИЮ · "+kindLabel;
  model.style.setProperty("--case-theme",c.theme||"#b78a56");
  lid.style.setProperty("--lid-angle","0deg");
  key.style.setProperty("--key-x","50px");key.style.setProperty("--key-y","-18px");key.style.setProperty("--key-angle","24deg");key.style.opacity="1";
@@ -662,7 +675,8 @@ async function animateCaseUnlock(c){
  const easeOut=p=>1-Math.pow(1-p,3);
  const status=document.getElementById("caseUnlockStatus");
  stage.classList.remove("hidden","is-unlocked");
- status.textContent="ВСТАВЛЯЕМ КЛЮЧ";
+ const kindLabel=c.kind==="graffiti"?"ГРАФФИТИ":c.kind==="capsule"?"КАПСУЛУ":c.kind==="patch"?"НАБОР НАШИВОК":c.kind==="charm"?"КОНТЕЙНЕР С БРЕЛОКАМИ":c.kind==="collection"?"КОНТЕЙНЕР":"КЕЙС";
+ status.textContent="ОТКРЫВАЕМ "+kindLabel;
  await tween(540,p=>{const e=easeOut(p);key.style.setProperty("--key-x",(50*(1-e))+"px");key.style.setProperty("--key-y",(-18*(1-e))+"px");key.style.setProperty("--key-angle",(24*(1-e))+"deg")});
  status.textContent="ПОВОРАЧИВАЕМ КЛЮЧ";playSound("unlock");
  await tween(620,p=>{key.style.setProperty("--key-angle",(82*easeOut(p))+"deg")});
@@ -703,8 +717,9 @@ async function openCase(id){
   document.getElementById("rouletteCaseName").textContent=c.name.toUpperCase()+" / OPENING";
   document.getElementById("rouletteStatus").textContent="Подготавливаем открытие…";
   result.classList.add("hidden");
-  panel.classList.remove("hidden","gold-drop","rare-drop");
-  panel.classList.add("is-opening");
+  panel.classList.remove("hidden","gold-drop","rare-drop","container-case","container-capsule","container-graffiti","container-patch","container-charm","container-collection");
+  const kindClass=["capsule","graffiti","patch","charm","collection"].includes(c.kind)?c.kind:"case";
+  panel.classList.add("is-opening","container-"+kindClass);
   if(hasContainerAnimation){resetCaseUnlockStage(c);windowEl.classList.add("hidden")}else{if(unlockStage)unlockStage.classList.add("hidden");windowEl.classList.remove("hidden")}
   // Render the opening sequence in a viewport overlay; keep the player on the page where they started.
   showOpeningOverlay(panel);
