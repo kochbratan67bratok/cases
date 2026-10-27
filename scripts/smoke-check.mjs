@@ -19,6 +19,8 @@ check(/function attemptContract\s*\(/.test(html), "contract flow exists");
 check(/function initYandex\s*\(/.test(html), "Yandex Games SDK initialization exists");
 check(/function save\s*\(/.test(html) && /function loadState\s*\(/.test(html), "save/load functions exist");
 check(/localStorage/.test(html), "local persistence is implemented");
+check(/state\.coins===freshState\(\)\.coins/.test(html), "cloud save restore matches the actual fresh-state balance");
+check(/prefers-reduced-motion/.test(html), "reduced-motion preference is respected");
 check(/ArrowLeft/.test(html) && /ArrowRight/.test(html) && /ArrowUp/.test(html) && /ArrowDown/.test(html), "TV remote arrow-key navigation is present");
 
 const inlineScripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
