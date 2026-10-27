@@ -60,6 +60,7 @@
 .upgrade-outcome.failure{display:block;color:var(--red);border:1px solid #f8717155;background:#f8717112}
 @media(max-width:650px){.upgrade-dial{width:58px;height:58px}.upgrade-dial:before{inset:7px}.upgrade-dial-needle{height:26px;transform-origin:50% 26px}.upgrade-dial-center{width:10px;height:10px}.upgrade-multipliers{gap:5px}.upgrade-multipliers button{flex-basis:42px}}
 @media(prefers-reduced-motion:reduce){.upgrade-dial-needle{transition:none!important}}
+ .market-price{display:block;color:var(--green);font-size:11px;font-weight:800;margin-top:3px}.market-price-muted{display:block;color:var(--muted);font-size:10px;margin-top:3px}
 </style>
 </head>
 <body>
@@ -215,7 +216,7 @@ function marketVariants(item){const base=String(item.marketName||item.name||"").
 function marketQuoteFromResult(result){const prices=result?.prices||result||{},steam=Number(prices.steam?.ask),lowest=Number(prices.lowest_ask?.price);if(Number.isFinite(steam)&&steam>0)return {price:steam,marketHashName:result.item||"",updatedAt:result.updated_at};if(Number.isFinite(lowest)&&lowest>0)return {price:lowest,marketHashName:result.item||"",updatedAt:result.updated_at};const other=[prices.skinport?.ask,prices.csfloat?.ask,prices.buff?.ask,prices.youpin?.ask].map(Number).filter(n=>Number.isFinite(n)&&n>0);return other.length?{price:Math.min(...other),marketHashName:result.item||"",updatedAt:result.updated_at}:null}
 async function refreshMarketPricesForContainer(id){
  const container=CASES.find(x=>x.id===id)||CAPSULES.find(x=>x.id===id);if(!container)return false;
- const loot=CONTAINER_LOOT[id];const list=loot?[...(loot.common||[]),...(loot.rare||[])]:CAPSULES.some(x=>x.id===id)?STICKERS.filter(x=>container.kind==="capsule"?x.type==="sticker":x.type===container.kind):[];
+ const loot=CONTAINER_LOOT[id];const isCapsule=CAPSULES.some(x=>x.id===id);const list=loot?[...(loot.common||[]),...(loot.rare||[])]:isCapsule?STICKERS.filter(x=>container.kind==="capsule"?x.type==="sticker":x.type===container.kind):SKINS.filter(x=>itemType(x)==="weapon").sort((a,b)=>rarityRank(a.rarity)-rarityRank(b.rarity)).slice(0,48).concat(SPECIALS);
  const unique=[...new Map(list.filter(x=>x&&x.name).map(x=>[x.name,x])).values()],now=Date.now();
  const pending=unique.filter(item=>{const q=marketPriceCache[item.name];if(q&&q.price>0&&now-(q.cachedAt||0)<12*60*60*1000){setMarketPrice(item,q);return false}return true});
  if(!pending.length){syncMarketPricesToInventory(unique);return true}
