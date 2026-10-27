@@ -19,6 +19,10 @@ check(/function attemptUpgrade\s*\(/.test(html), "upgrade flow exists");
 check(/id="upgradeDial"/.test(html) && /id="upgradeDialNeedle"/.test(html), "CS2-style upgrade chance wheel exists");
 check(/data-upgrade-multiplier="1\.5"/.test(html) && /data-upgrade-multiplier="10"/.test(html), "upgrade multipliers x1 through x10 including x1.5 are available");
 check(/function catalogSkinPrice\s*\(/.test(html) && /function catalogCasePrice\s*\(/.test(html), "catalog skins and containers receive deterministic individual prices");
+check(/function refreshMarketPricesForContainer\s*\(/.test(html) && /api\.openskin\.dev\/v1\/prices\/batch/.test(html), "case contents can load live CS2 market prices from a batched price API");
+check(/1\s*000\s*CR/.test(html) && /marketPriceUsd/.test(html), "market prices are shown in USD and mapped to in-game credits");
+check(/function renderContainerPreviewItems\s*\(/.test(html) && /marketPriceLabel\(x\)/.test(html), "case contents display market prices for individual skins");
+
 check(/caseLab\.catalog\.cache\.v4/.test(html) && /priceByName\.get\(item\.name\)/.test(html), "cached catalog is refreshed and saved inventory prices are migrated");
 check(/id="loadMoreCases"/.test(html) && /caseVisibleCount=24/.test(html), "case feed renders in batches to reduce scrolling load");
 
