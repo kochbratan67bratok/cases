@@ -586,11 +586,16 @@ async function openCase(id){
   document.getElementById("rouletteStatus").textContent="Крутим рулетку…";
   panel.scrollIntoView({behavior:"auto",block:"center"});
   track.getBoundingClientRect();
-  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  // Some online editors / embedded mobile webviews do not expose requestAnimationFrame reliably.
+  const raf=typeof window!=="undefined"&&typeof window.requestAnimationFrame==="function"
+    ? window.requestAnimationFrame.bind(window)
+    : callback=>setTimeout(callback,16);
+  await new Promise(resolve=>raf(()=>raf(resolve)));
   const targetTile=track.children[34];
+  if(!targetTile)throw new Error("Рулетка не создала карточки предметов");
   const target=Math.max(0,targetTile.offsetLeft+targetTile.offsetWidth/2-windowEl.getBoundingClientRect().width/2);
   track.style.transition="transform 5.4s cubic-bezier(.08,.72,.12,1)";
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{track.style.transform="translate3d(-"+target+"px,0,0)"}));
+  raf(()=>raf(()=>{track.style.transform="translate3d(-"+target+"px,0,0)"}));
   playSound("tick");tickTimer=setInterval(()=>playSound("tick"),220);
   await new Promise(resolve=>setTimeout(resolve,5550));
   if(tickTimer){clearInterval(tickTimer);tickTimer=null}
@@ -605,7 +610,7 @@ async function openCase(id){
   document.getElementById("rouletteStatus").textContent="Готово · +18 XP";
   result.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
  }catch(error){
-  console.error("Case opening error",error);
+  console.error("Case opening error:",error?.message||error,error?.stack||"");
   if(charged&&prize&&!state.inventory.some(x=>x.uid===prize.uid)){state.inventory.unshift(prize);addXP(18)}
   save();renderAll();
   notify(charged?"Предмет сохранён в инвентарь. Анимация прервалась — попробуй ещё раз.":"Не удалось начать открытие. Кредиты не списаны.");
