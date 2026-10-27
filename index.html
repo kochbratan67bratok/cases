@@ -407,9 +407,57 @@ const activeAudioContexts=new Set();
 function stopAllSounds(){for(const ctx of activeAudioContexts){try{ctx.close()}catch(e){}}activeAudioContexts.clear()}
 function playSound(kind="tick"){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;const ctx=new Audio();activeAudioContexts.add(ctx);const t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=kind==="win"?"triangle":"sine";o.frequency.setValueAtTime(kind==="win"?560:kind==="rare"?360:160,t);o.frequency.exponentialRampToValueAtTime(kind==="win"?960:70,t+.12);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(kind==="win"?.08:.025,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+.16);o.start(t);o.stop(t+.17);setTimeout(()=>{activeAudioContexts.delete(ctx);ctx.close().catch(()=>{})},300)}catch(e){}}
 function rouletteTile(s){return '<div class="roulette-tile" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#b0c3d9")+'">'+skinImage(s)+'<span>'+escapeHtml(s.name)+'</span><small>'+(s.marketPriceUsd>0?"$"+Number(s.marketPriceUsd).toFixed(2):money(s.value)+" CR")+'</small></div>'}
-async function openCase(id){const c=CASES.find(x=>x.id===id)||CAPSULES.find(x=>x.id===id);if(!c||opening)return;if(state.coins<c.price){notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}opening=true;notify("Обновляю рыночные цены скинов…");await refreshMarketPricesForContainer(id);if(state.coins<c.price){opening=false;notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}const panel=document.getElementById("openingPanel");state.coins-=c.price;state.opens++;const prize=pickSkin(id);try{document.getElementById("rouletteCaseName").textContent=c.name.toUpperCase()+" / OPENING";document.getElementById("rouletteStatus").textContent="Кейс открыт — определяем предмет…";document.getElementById("openResult").classList.add("hidden");panel.classList.remove("hidden");panel.classList.remove("is-opening","gold-drop","rare-drop");panel.classList.add("is-opening");const track=document.getElementById("rouletteTrack");track.style.transition="none";track.style.transform="translateX(0)";const strip=Array.from({length:42},()=>pickSkin(id));strip[34]=prize;track.innerHTML=strip.map(rouletteTile).join("");const targetTile=track.children[34];track.getBoundingClientRect();const target=targetTile.offsetLeft+targetTile.offsetWidth/2-document.querySelector(".roulette-window").clientWidth/2;track.style.transition="transform 4.6s cubic-bezier(.08,.72,.08,1)";track.style.transform="translateX(-"+Math.max(0,target)+"px)";playSound("tick");const tickTimer=setInterval(()=>playSound("tick"),220);await new Promise(resolve=>setTimeout(resolve,4700));clearInterval(tickTimer);playSound(rarityRank(prize.rarity)>=4?"win":"rare");panel.classList.remove("is-opening");state.inventory.unshift(prize);if(rarityRank(prize.rarity)>=2||itemType(prize)==="knife"||itemType(prize)==="gloves")state.rareDrops++;addXP(18);save();renderAll();panel.classList.remove("gold-drop","rare-drop");panel.classList.add((itemType(prize)==="knife"||itemType(prize)==="gloves")?"gold-drop":rarityRank(prize.rarity)>=4?"rare-drop":"");const result=document.getElementById("openResult");result.innerHTML='<div class="result-art">'+skinImage(prize)+'</div><div style="min-width:0;flex:1"><div class="eyebrow">ПРЕДМЕТ ПОЛУЧЕН</div><div class="result-title">'+escapeHtml(prize.name)+'</div><div class="rarity-label" style="--rarity-color:'+(RARITY[prize.rarity]?.color||"#fff")+'">'+escapeHtml(RARITY[prize.rarity]?.label||prize.rarity)+'</div><div class="result-value">◈ '+money(prize.value)+' CR</div><small class="market-price-muted">'+(prize.marketPriceUsd>0?marketPriceLabel(prize):"Рыночная цена не найдена")+'</small></div><button data-result-inventory>В инвентарь</button>';result.classList.remove("hidden");result.querySelector("[data-result-inventory]").addEventListener("click",()=>go("inventory"));document.getElementById("rouletteStatus").textContent="Готово · +25 XP";result.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"})}catch(error){console.error("Case opening error",error);if(!state.inventory.some(x=>x.uid===prize.uid))state.inventory.unshift(prize);addXP(18);save();renderAll();notify("Предмет сохранён, но анимация не завершилась.")}finally{opening=false;renderAll()}}
+async function openCase(id){
+ const c=CASES.find(x=>x.id===id)||CAPSULES.find(x=>x.id===id);
+ if(!c||opening)return;
+ if(state.coins<c.price){notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}
+ opening=true;
+ const panel=document.getElementById("openingPanel"),track=document.getElementById("rouletteTrack"),windowEl=document.querySelector(".roulette-window"),result=document.getElementById("openResult");
+ let tickTimer=null,charged=false,prize=null;
+ try{
+  document.getElementById("rouletteCaseName").textContent=c.name.toUpperCase()+" / OPENING";
+  document.getElementById("rouletteStatus").textContent="Подготавливаем открытие…";
+  result.classList.add("hidden");
+  panel.classList.remove("hidden","gold-drop","rare-drop");
+  panel.classList.add("is-opening");
+  panel.scrollIntoView({behavior:"auto",block:"center"});
+  // Price refresh must never prevent the opening screen from appearing. Wait briefly, then continue with cached prices.
+  try{await Promise.race([refreshMarketPricesForContainer(id),new Promise(resolve=>setTimeout(resolve,1400))])}catch(error){console.warn("Market refresh skipped for opening",error)}
+  if(state.coins<c.price){notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}
+  state.coins-=c.price;state.opens++;charged=true;prize=pickSkin(id);
+  const strip=Array.from({length:42},()=>pickSkin(id));strip[34]=prize;
+  track.style.transition="none";track.style.transform="translateX(0)";track.innerHTML=strip.map(rouletteTile).join("");
+  document.getElementById("rouletteStatus").textContent="Крутим рулетку…";
+  track.getBoundingClientRect();
+  const targetTile=track.children[34];
+  const target=targetTile.offsetLeft+targetTile.offsetWidth/2-windowEl.clientWidth/2;
+  track.style.transition="transform 4.6s cubic-bezier(.08,.72,.08,1)";
+  requestAnimationFrame(()=>{track.style.transform="translateX(-"+Math.max(0,target)+"px)"});
+  playSound("tick");tickTimer=setInterval(()=>playSound("tick"),220);
+  await new Promise(resolve=>setTimeout(resolve,4700));
+  if(tickTimer){clearInterval(tickTimer);tickTimer=null}
+  playSound(rarityRank(prize.rarity)>=4?"win":"rare");panel.classList.remove("is-opening");
+  if(!state.inventory.some(x=>x.uid===prize.uid))state.inventory.unshift(prize);
+  if(rarityRank(prize.rarity)>=2||itemType(prize)==="knife"||itemType(prize)==="gloves")state.rareDrops++;
+  addXP(18);save();renderAll();
+  panel.classList.toggle("gold-drop",itemType(prize)==="knife"||itemType(prize)==="gloves");
+  panel.classList.toggle("rare-drop",!(itemType(prize)==="knife"||itemType(prize)==="gloves")&&rarityRank(prize.rarity)>=4);
+  result.innerHTML='<div class="result-art">'+skinImage(prize)+'</div><div style="min-width:0;flex:1"><div class="eyebrow">ПРЕДМЕТ ПОЛУЧЕН</div><div class="result-title">'+escapeHtml(prize.name)+'</div><div class="rarity-label" style="--rarity-color:'+(RARITY[prize.rarity]?.color||"#fff")+'">'+escapeHtml(RARITY[prize.rarity]?.label||prize.rarity)+'</div><div class="result-value">◈ '+money(prize.value)+' CR</div><small class="market-price-muted">'+(prize.marketPriceUsd>0?marketPriceLabel(prize):"Рыночная цена не найдена")+'</small></div><button data-result-inventory>В инвентарь</button>';
+  result.classList.remove("hidden");result.querySelector("[data-result-inventory]").addEventListener("click",()=>go("inventory"));
+  document.getElementById("rouletteStatus").textContent="Готово · +18 XP";
+  result.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
+ }catch(error){
+  console.error("Case opening error",error);
+  if(charged&&prize&&!state.inventory.some(x=>x.uid===prize.uid)){state.inventory.unshift(prize);addXP(18)}
+  save();renderAll();
+  notify(charged?"Предмет сохранён в инвентарь. Анимация прервалась — попробуй ещё раз.":"Не удалось начать открытие. Кредиты не списаны.");
+ }finally{
+  if(tickTimer)clearInterval(tickTimer);
+  panel.classList.remove("is-opening");opening=false;renderAll();
+ }
+}
 function renderInventory(){const root=document.getElementById("inventoryGrid"),search=(document.getElementById("inventorySearch")?.value||"").trim().toLowerCase(),sort=document.getElementById("inventorySort")?.value||"new";let items=state.inventory.filter(s=>(inventoryFilter==="all"||s.rarity===inventoryFilter)&&s.name.toLowerCase().includes(search));if(sort==="high")items.sort((a,b)=>b.value-a.value);else if(sort==="low")items.sort((a,b)=>a.value-b.value);else items.sort((a,b)=>(b.obtained||0)-(a.obtained||0));document.getElementById("inventoryCount").textContent=state.inventory.length+" предметов";document.getElementById("sellAllBtn").disabled=!state.inventory.length;if(!items.length){root.innerHTML='<div class="empty" style="grid-column:1/-1"><strong>Пока пусто</strong>Открой кейс, чтобы получить первый предмет.</div>';return}root.innerHTML=items.map(s=>'<article class="skin-card"><div class="skin-rarity" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#9ca3af")+'"></div><div class="skin-image">'+skinImage(s)+'</div><div class="skin-content"><div class="skin-name">'+escapeHtml(s.name)+'</div><div class="skin-meta"><span class="rarity-label" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#9ca3af")+'">'+escapeHtml(RARITY[s.rarity]?.label||s.rarity)+'</span><span class="skin-value">◈ '+money(s.value)+' CR</span></div><small class="market-price-muted">'+(s.marketPriceUsd>0?marketPriceLabel(s):"Рыночная цена не загружена")+"</small>"+'<div class="skin-actions"><button data-sell="'+s.uid+'">Продать</button><button data-upgrade="'+s.uid+'">Апгрейд</button></div></div></article>').join("");root.querySelectorAll("[data-sell]").forEach(b=>b.addEventListener("click",()=>sellItem(b.dataset.sell)));root.querySelectorAll("[data-upgrade]").forEach(b=>b.addEventListener("click",()=>{selectedUpgradeUid=b.dataset.upgrade;go("upgrade");renderUpgrade()}))}
-function saleValue(item){const factor=(item.type==="knife"||item.type==="gloves")?.72:(item.type==="sticker"||item.type==="patch"||item.type==="charm")?.62:({common:.48,uncommon:.52,rare:.56,epic:.60,legendary:.64,mythic:.68}[item.rarity]||.5);return Math.max(1,Math.floor((Number(item.value)||1)*factor))}
+function saleValue(item){const factor=(item.type==="knife"||item.type==="gloves")?.72:(item.type==="sticker"||item.type==="patch"||item.type==="charm")?.62:({common:.48,uncommon:.52,rare:.56,epic:.60,legendary:.64,mythic:.68}[item.rarity]||.5);const marketValue=Number(item.marketPriceUsd)>0?Number(item.marketPriceUsd)*1000:Number(item.value);return Math.max(1,Math.floor((Number.isFinite(marketValue)&&marketValue>0?marketValue:1)*factor))}
 function sellItem(id){const i=state.inventory.findIndex(s=>s.uid===id);if(i<0)return;const [item]=state.inventory.splice(i,1);const payout=saleValue(item);state.coins+=payout;if(selectedUpgradeUid===id)selectedUpgradeUid=null;contractSelection=contractSelection.filter(x=>x!==id);save();renderAll();notify("Продано за "+money(payout)+" CR")}
 function sellAll(){if(!state.inventory.length)return;const total=state.inventory.reduce((n,s)=>n+saleValue(s),0);state.inventory=[];selectedUpgradeUid=null;contractSelection=[];state.coins+=total;save();renderAll();notify("Продано предметов на "+money(total)+" CR")}
 function dailyReward(){const today=localDateKey();if(state.dailyDate===today)return notify("Бонус дня уже получен. Возвращайся завтра.");state.dailyDate=today;state.coins+=250;addXP(40);save();renderAll();notify("Бонус: +250 CR и +40 XP")}
@@ -418,7 +466,8 @@ function claimPass(lv){if(lv>level()||state.claimedPass.includes(lv))return;cons
 const MISSION_DEFS=[{id:"open3",title:"Первый заход",desc:"Открой 3 кейса",goal:3,reward:120,icon:"▣",progress:()=>state.opens},{id:"rare1",title:"Охотник за редкостью",desc:"Получи 1 предмет Mil-Spec или выше",goal:1,reward:180,icon:"✦",progress:()=>state.rareDrops},{id:"collect5",title:"Коллекционер",desc:"Собери 5 предметов в инвентаре",goal:5,reward:150,icon:"▤",progress:()=>state.inventory.length}];
 function renderMissions(){document.getElementById("missions").innerHTML=MISSION_DEFS.map(m=>{const p=Math.min(m.goal,m.progress()),claimed=state.missionClaims.includes(m.id);return '<div class="mission"><div class="mission-icon">'+m.icon+'</div><div class="mission-main"><div class="mission-title">'+m.title+'</div><div class="mission-desc">'+m.desc+' · '+p+'/'+m.goal+'</div><div class="progress" style="margin:6px 0 0;height:4px"><span style="width:'+(p/m.goal*100)+'%;background:var(--green)"></span></div></div><button data-claim-mission="'+m.id+'" '+(p<m.goal||claimed?"disabled":"")+'>'+(claimed?"Получено":"+"+m.reward+" CR")+'</button></div>'}).join("");document.querySelectorAll("[data-claim-mission]").forEach(b=>b.addEventListener("click",()=>claimMission(b.dataset.claimMission)))}
 function claimMission(id){const m=MISSION_DEFS.find(x=>x.id===id);if(!m||state.missionClaims.includes(id)||m.progress()<m.goal)return;state.missionClaims.push(id);state.coins+=m.reward;addXP(20);save();renderAll();notify("Миссия выполнена: +"+m.reward+" CR")}
-function upgradeSuccessChance(sourceValue,targetValue){if(!(sourceValue>0&&targetValue>sourceValue))return 0;return Math.min(.85,Math.max(.01,.92*sourceValue/targetValue))}
+function secureRandomUnit(){try{if(window.crypto?.getRandomValues){const bytes=new Uint32Array(1);window.crypto.getRandomValues(bytes);return bytes[0]/4294967296}}catch(e){}return Math.random()}
+function upgradeSuccessChance(sourceValue,targetValue){if(!(sourceValue>0&&targetValue>sourceValue))return 0;const ratio=targetValue/sourceValue;return Math.min(.85,Math.max(.005,.92/ratio))}
 function renderUpgrade(){
  const item=state.inventory.find(s=>s.uid===selectedUpgradeUid);
  if(!item||upgradePreview?.sourceUid!==item?.uid)upgradePreview=null;
@@ -432,8 +481,8 @@ function renderUpgrade(){
  }else{
   src.innerHTML=upgradeSkinImage(item)+'<strong>'+escapeHtml(item.name)+'</strong><span class="skin-value">◈ '+money(item.value)+' CR</span>';
   const desired=item.value*Math.max(1.03,upgradeMultiplier);
-  let pool=SKINS.filter(s=>Number(s.value)>item.value&&Number(s.value)>=desired*0.82&&Number(s.value)<=desired*1.25);
-  if(!pool.length)pool=SKINS.filter(s=>Number(s.value)>item.value).sort((a,b)=>Math.abs(a.value-desired)-Math.abs(b.value-desired)).slice(0,80);
+  let pool=SKINS.filter(s=>Number(s.value)>=desired&&Number(s.value)<=desired*1.25);
+  if(!pool.length)pool=SKINS.filter(s=>Number(s.value)>=desired).sort((a,b)=>Math.abs(a.value-desired)-Math.abs(b.value-desired)).slice(0,80);
   pool=pool.sort((a,b)=>Math.abs(a.value-desired)-Math.abs(b.value-desired)).slice(0,80);
   const oldName=upgradePreview?.target?.name;
   if(!pool.some(s=>s.name===oldName))upgradePreview={sourceUid:item.uid,target:null};
@@ -461,7 +510,7 @@ async function attemptUpgrade(){
  if(!target)return notify("Выбери конкретный скин для апгрейда.");
  const idx=state.inventory.findIndex(s=>s.uid===item.uid);if(idx<0)return;
  const ratio=target.value/item.value,chance=upgradeSuccessChance(item.value,target.value);
- const roll=Math.random(),success=roll<chance,angle=roll*360;
+ const roll=secureRandomUnit(),success=roll<chance,angle=roll*360;
  upgrading=true;document.getElementById("upgradeBtn").disabled=true;document.getElementById("upgradeBtn").textContent="Крутим…";const stage=document.querySelector("#page-upgrade .upgrade-stage");if(stage)stage.classList.add("is-spinning");
  const needle=document.getElementById("upgradeDialNeedle");needle.style.transform="rotate("+(1080+angle)+"deg)";
  await new Promise(resolve=>setTimeout(resolve,1300));
