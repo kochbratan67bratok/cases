@@ -665,7 +665,7 @@ async function openCase(id){
  if(isDailyCase&&state.dailyCaseDate===localDateKey()){notify("Ежедневный кейс уже открыт. Возвращайся завтра!");return}
  if(!isDailyCase&&state.coins<c.price&&state.freeOpens<1){notify("Не хватает кредитов. Забери ежедневный бонус, продай скин или получи бесплатное открытие.");return}
  const isWeaponCase=isDailyCase||CASES.some(x=>x.id===id);
- opening=true;
+ opening=true;playSound("tick");
  const panel=document.getElementById("openingPanel"),track=document.getElementById("rouletteTrack"),windowEl=document.querySelector("#openingPanel .roulette-window"),result=document.getElementById("openResult"),unlockStage=document.getElementById("caseUnlockStage");
  if(!panel||!track||!windowEl||!result||(isWeaponCase&&!unlockStage)){opening=false;console.error("Case opening panel is missing");notify("Не удалось открыть рулетку: элементы интерфейса не найдены.");return}
  let tickTimer=null,charged=false,prize=null,finished=false;
