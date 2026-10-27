@@ -266,6 +266,27 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 @media(max-width:900px){.shell{padding-left:16px;padding-right:16px}.case-grid{gap:10px}.case-art{height:132px}.topbar{height:68px}}
 @media(max-width:650px){.shell{padding:0 12px 100px}.topbar{height:60px}.page{padding-top:20px}.hero{border-radius:17px;padding:23px 18px 15px;gap:0}.hero h1{font-size:clamp(36px,10vw,44px)}.hero-art .big-crate{width:205px}.stats{gap:8px}.stat{padding:12px}.stat-value{font-size:20px}.section-title{margin:24px 0 12px}.section-title h2{font-size:17px}.case-grid{gap:9px}.case-card{padding:8px;border-radius:12px}.case-art{height:104px}.case-card h3{font-size:12px}.case-bottom button{padding:9px 7px}.panel{padding:12px}.upgrade-stage{padding:9px;gap:7px}.upgrade-dial{max-width:72px;max-height:72px}.upgrade-slot{min-height:112px}.bottom-nav{padding-top:7px}.preview-dialog{border-radius:16px}}
 
+
+/* Motion polish: reel, rare reveal, upgrade outcome and daily reward */
+@keyframes caseLabPageIn{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page.active{animation:caseLabPageIn .22s ease-out both}
+#openingPanel.is-opening .roulette-window{box-shadow:inset 0 0 0 1px #b8ff3b22,0 0 24px #b8ff3b0b}
+#openingPanel.is-opening .roulette-window:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,#ffffff12 49%,transparent 63%);transform:translateX(-100%);animation:reelShine 1.25s ease-in-out infinite}
+@keyframes reelShine{to{transform:translateX(100%)}}
+#openingPanel.gold-drop .result-art,#openingPanel.rare-drop .result-art{animation:dropReveal .65s cubic-bezier(.2,.85,.25,1.3) both}
+@keyframes dropReveal{0%{opacity:0;transform:translateY(12px) scale(.72)}70%{opacity:1;transform:translateY(-3px) scale(1.06)}100%{transform:translateY(0) scale(1)}}
+#page-upgrade .upgrade-stage.is-spinning .upgrade-dial{filter:drop-shadow(0 0 12px #b8ff3b66)}
+#upgradeOutcome.success{animation:upgradeSuccessPop .42s cubic-bezier(.2,.8,.25,1.25) both}
+#upgradeOutcome.failure{animation:upgradeFailureShake .35s ease-out both}
+@keyframes upgradeSuccessPop{0%{opacity:0;transform:scale(.94) translateY(5px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes upgradeFailureShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#dailyBtn.reward-pop,#passDailyBtn.reward-pop{animation:rewardPop .55s cubic-bezier(.2,.8,.2,1.2);border-color:#b8ff3b;box-shadow:0 0 0 5px #b8ff3b18,0 0 30px #b8ff3b25}
+@keyframes rewardPop{0%{transform:scale(.94)}60%{transform:scale(1.045)}100%{transform:scale(1)}}
+.case-lab-confetti{position:fixed;inset:0;z-index:9999;overflow:hidden;pointer-events:none}
+.case-lab-confetti i{position:absolute;top:-18px;width:7px;height:12px;border-radius:2px;opacity:0;animation:caseLabConfettiFall var(--duration,1.5s) cubic-bezier(.2,.65,.35,1) forwards;animation-delay:var(--delay,0s);transform:rotate(var(--spin,0deg))}
+@keyframes caseLabConfettiFall{0%{opacity:0;transform:translate3d(0,-12px,0) rotate(0)}8%{opacity:1}100%{opacity:0;transform:translate3d(var(--drift,20px),105vh,0) rotate(var(--spin,540deg))}}
+@media(prefers-reduced-motion:reduce){.page.active{animation:none}#openingPanel.is-opening .roulette-window:after{animation:none}#upgradeOutcome.success,#upgradeOutcome.failure{animation:none}.case-lab-confetti{display:none}}
+
 </style>
 </head>
 <body>
@@ -503,6 +524,14 @@ function renderCases(){
 }
 const activeAudioContexts=new Set();
 function stopAllSounds(){for(const ctx of activeAudioContexts){try{ctx.close()}catch(e){}}activeAudioContexts.clear()}
+function celebrateCaseLab(kind="rare"){
+ if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+ const colors=kind==="gold"?["#ffe08a","#f5b83d","#fff5cb","#f7f7f7"]:["#b8ff3b","#e8ffb9","#70d7ff","#ffffff"];
+ const layer=document.createElement("div");layer.className="case-lab-confetti";layer.setAttribute("aria-hidden","true");
+ for(let i=0;i<42;i++){const bit=document.createElement("i");bit.style.left=(Math.random()*100)+"%";bit.style.background=colors[Math.floor(Math.random()*colors.length)];bit.style.setProperty("--duration",(1.1+Math.random()*1.15)+"s");bit.style.setProperty("--delay",(Math.random()*.22)+"s");bit.style.setProperty("--drift",((Math.random()-.5)*180)+"px");bit.style.setProperty("--spin",(180+Math.random()*900)+"deg");layer.appendChild(bit)}
+ document.body.appendChild(layer);setTimeout(()=>layer.remove(),1900);
+}
+function pulseDailyReward(button){if(!button)return;button.classList.remove("reward-pop");void button.offsetWidth;button.classList.add("reward-pop");setTimeout(()=>button.classList.remove("reward-pop"),650);celebrateCaseLab("rare")}
 function playSound(kind="tick"){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;const ctx=new Audio();activeAudioContexts.add(ctx);const t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=kind==="win"?"triangle":"sine";o.frequency.setValueAtTime(kind==="win"?560:kind==="rare"?360:160,t);o.frequency.exponentialRampToValueAtTime(kind==="win"?960:70,t+.12);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(kind==="win"?.08:.025,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+.16);o.start(t);o.stop(t+.17);setTimeout(()=>{activeAudioContexts.delete(ctx);ctx.close().catch(()=>{})},300)}catch(e){}}
 function rouletteTile(s){return '<div class="roulette-tile" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#b0c3d9")+'">'+skinImage(s)+'<span>'+escapeHtml(s.name)+'</span><small>'+(s.marketPriceUsd>0?"$"+Number(s.marketPriceUsd).toFixed(2):money(s.value)+" CR")+'</small></div>'}
 async function openCase(id){
@@ -541,7 +570,7 @@ async function openCase(id){
   panel.classList.toggle("gold-drop",itemType(prize)==="knife"||itemType(prize)==="gloves");
   panel.classList.toggle("rare-drop",!(itemType(prize)==="knife"||itemType(prize)==="gloves")&&rarityRank(prize.rarity)>=4);
   result.innerHTML='<div class="result-art">'+skinImage(prize)+'</div><div style="min-width:0;flex:1"><div class="eyebrow">ПРЕДМЕТ ПОЛУЧЕН</div><div class="result-title">'+escapeHtml(prize.name)+'</div><div class="rarity-label" style="--rarity-color:'+(RARITY[prize.rarity]?.color||"#fff")+'">'+escapeHtml(RARITY[prize.rarity]?.label||prize.rarity)+'</div><div class="result-value">◈ '+money(prize.value)+' CR</div><small class="market-price-muted">'+(prize.marketPriceUsd>0?marketPriceLabel(prize):"Рыночная цена не найдена")+'</small></div><button data-result-inventory>В инвентарь</button>';
-  result.classList.remove("hidden");result.querySelector("[data-result-inventory]").addEventListener("click",()=>go("inventory"));
+  result.classList.remove("hidden");if(rarityRank(prize.rarity)>=4||itemType(prize)==="knife"||itemType(prize)==="gloves")celebrateCaseLab(itemType(prize)==="knife"||itemType(prize)==="gloves"?"gold":"rare");result.querySelector("[data-result-inventory]").addEventListener("click",()=>go("inventory"));
   document.getElementById("rouletteStatus").textContent="Готово · +18 XP";
   result.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
  }catch(error){
@@ -558,7 +587,7 @@ function renderInventory(){const root=document.getElementById("inventoryGrid"),s
 function saleValue(item){const factor=(item.type==="knife"||item.type==="gloves")?.72:(item.type==="sticker"||item.type==="patch"||item.type==="charm")?.62:({common:.48,uncommon:.52,rare:.56,epic:.60,legendary:.64,mythic:.68}[item.rarity]||.5);const marketValue=Number(item.marketPriceUsd)>0?Number(item.marketPriceUsd)*1000:Number(item.value);return Math.max(1,Math.floor((Number.isFinite(marketValue)&&marketValue>0?marketValue:1)*factor))}
 function sellItem(id){const i=state.inventory.findIndex(s=>s.uid===id);if(i<0)return;const [item]=state.inventory.splice(i,1);const payout=saleValue(item);state.coins+=payout;if(selectedUpgradeUid===id)selectedUpgradeUid=null;contractSelection=contractSelection.filter(x=>x!==id);save();renderAll();notify("Продано за "+money(payout)+" CR")}
 function sellAll(){if(!state.inventory.length)return;const total=state.inventory.reduce((n,s)=>n+saleValue(s),0);state.inventory=[];selectedUpgradeUid=null;contractSelection=[];state.coins+=total;save();renderAll();notify("Продано предметов на "+money(total)+" CR")}
-function dailyReward(){const today=localDateKey();if(state.dailyDate===today)return notify("Бонус дня уже получен. Возвращайся завтра.");state.dailyDate=today;state.coins+=250;addXP(40);save();renderAll();notify("Бонус: +250 CR и +40 XP")}
+function dailyReward(){const today=localDateKey();if(state.dailyDate===today)return notify("Бонус дня уже получен. Возвращайся завтра.");state.dailyDate=today;state.coins+=250;addXP(40);save();renderAll();pulseDailyReward(document.getElementById("dailyBtn"));pulseDailyReward(document.getElementById("passDailyBtn"));notify("Бонус: +250 CR и +40 XP")}
 function renderPass(){const lv=level(),xp=xpInLevel();document.getElementById("passLevel").textContent=lv;document.getElementById("passBadge").textContent=lv;document.getElementById("levelTop").textContent=lv;document.getElementById("passProgress").style.width=xp+"%";document.getElementById("xpLabel").textContent=lv===30?"Максимальный уровень":xp+" / 100 XP до следующего уровня";document.getElementById("tiers").innerHTML=PASS_REWARDS.map(r=>{const claimed=state.claimedPass.includes(r.level),unlocked=lv>=r.level,itemLabel=r.item?(r.item==="capsule"?" + капсула":" + скин"):"";return '<div class="mission"><div class="mission-icon">'+(claimed?"✓":r.item?"▣":"★")+'</div><div class="mission-main"><div class="mission-title">Уровень '+r.level+'</div><div class="mission-desc">Награда: '+money(r.coins)+' CR'+itemLabel+'</div></div><button data-claim-level="'+r.level+'" '+(!unlocked||claimed?"disabled":"")+'>'+(claimed?"Получено":unlocked?"Забрать":"Закрыто")+'</button></div>'}).join("");document.querySelectorAll("[data-claim-level]").forEach(b=>b.addEventListener("click",()=>claimPass(Number(b.dataset.claimLevel))));renderMissions()}
 function claimPass(lv){if(lv>level()||state.claimedPass.includes(lv))return;const reward=PASS_REWARDS[lv-1];if(!reward)return;state.claimedPass.push(lv);state.coins+=reward.coins;let bonus="";if(reward.item==="capsule"){const options=CAPSULES.filter(x=>x.kind==="capsule");const c=options[Math.floor(Math.random()*options.length)];const p=STICKERS.filter(x=>x.type==="sticker")[Math.floor(Math.random()*STICKERS.filter(x=>x.type==="sticker").length)];state.inventory.unshift(makeDrop(p,c.id));bonus=" + коллекционный стикер"}else if(reward.item==="skin"){const c=CASES[Math.floor(Math.random()*CASES.length)];state.inventory.unshift(pickSkin(c.id));bonus=" + скин из кейса"}save();renderAll();notify("Награда уровня "+lv+": +"+money(reward.coins)+" CR"+bonus)}
 const MISSION_DEFS=[{id:"open3",title:"Первый заход",desc:"Открой 3 кейса",goal:3,reward:120,icon:"▣",progress:()=>state.opens},{id:"rare1",title:"Охотник за редкостью",desc:"Получи 1 предмет Mil-Spec или выше",goal:1,reward:180,icon:"✦",progress:()=>state.rareDrops},{id:"collect5",title:"Коллекционер",desc:"Собери 5 предметов в инвентаре",goal:5,reward:150,icon:"▤",progress:()=>state.inventory.length}];
@@ -616,7 +645,7 @@ async function attemptUpgrade(){
  state.inventory.splice(idx,1);selectedUpgradeUid=null;upgradePreview=null;
  if(success){state.inventory.unshift({...target,uid:uid(),obtained:Date.now(),caseId:"upgrade"});addXP(25);outcome.className="upgrade-outcome success";outcome.textContent="✓ УДАЧНО! Получен "+target.name+" · "+money(target.value)+" CR";playSound("win")}
  else{outcome.className="upgrade-outcome failure";outcome.textContent="✕ НЕУДАЧНО — исходный скин потерян";playSound("rare")}
- save();upgrading=false;if(stage)stage.classList.remove("is-spinning");renderAll();outcome.className="upgrade-outcome "+(success?"success":"failure");outcome.textContent=success?"✓ УДАЧНО! Получен "+target.name+" · "+money(target.value)+" CR":"✕ НЕУДАЧНО — исходный скин потерян";
+ save();upgrading=false;if(stage)stage.classList.remove("is-spinning");renderAll();outcome.className="upgrade-outcome "+(success?"success":"failure");outcome.textContent=success?"✓ УДАЧНО! Получен "+target.name+" · "+money(target.value)+" CR":"✕ НЕУДАЧНО — исходный скин потерян";if(success)celebrateCaseLab(itemType(target)==="knife"||itemType(target)==="gloves"?"gold":"rare");
 }
 function renderContract(){const slots=document.getElementById("contractSlots");slots.innerHTML=Array.from({length:5},(_,i)=>{const s=state.inventory.find(x=>x.uid===contractSelection[i]);return '<div class="contract-slot">'+(s?skinImage(s):'<span>+</span>')+'</div>'}).join("");const items=contractSelection.map(id=>state.inventory.find(s=>s.uid===id)).filter(Boolean);const valid=items.length===5&&items.every(s=>s.rarity===items[0].rarity)&&rarityRank(items[0].rarity)<5;document.getElementById("contractBtn").disabled=!valid;document.getElementById("contractBtn").textContent=items.length===5?"Обменять 5 предметов":"Выбрано "+items.length+" / 5";document.getElementById("contractClear").disabled=!items.length}
 function toggleContract(id){if(contractSelection.includes(id))contractSelection=contractSelection.filter(x=>x!==id);else{if(contractSelection.length>=5)return notify("В контракте может быть только 5 предметов.");const item=state.inventory.find(s=>s.uid===id);if(contractSelection.length){const first=state.inventory.find(s=>s.uid===contractSelection[0]);if(first&&item&&first.rarity!==item.rarity)return notify("Для контракта выбери предметы одной редкости.")}contractSelection.push(id)}renderInventory();renderUpgrade()}
