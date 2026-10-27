@@ -330,12 +330,12 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 .case-crate-lid{position:absolute;z-index:3;left:-1px;top:-1px;width:calc(100% + 2px);height:29px;transform-origin:50% 100%;transform:rotateX(var(--lid-angle,0deg));backface-visibility:visible;border:1px solid #ffffff4a;border-radius:7px 7px 3px 3px;background:linear-gradient(155deg,var(--case-theme),#202b36);box-shadow:inset 0 2px #ffffff55,inset 0 -4px #0002;display:grid;place-items:center}
 .case-crate-lid:after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:2px;background:#141a20a6}
 .case-crate-lid-label{font-size:7px;letter-spacing:.3em;font-weight:1000;color:#fff9}
-.case-unlock-key{position:absolute;z-index:4;left:calc(50% - 1px);top:61%;width:112px;height:36px;color:#f5d08b;filter:drop-shadow(0 2px 4px #000c);transform-origin:87% 50%;transform:translate3d(var(--key-x,50px),var(--key-y,-18px),0) rotate(var(--key-angle,24deg))}
+.case-unlock-key{position:absolute;z-index:4;left:calc(50% - 1px);top:75%;width:112px;height:36px;color:#f5d08b;filter:drop-shadow(0 2px 4px #000c);transform-origin:87% 50%;transform:translate3d(var(--key-x,50px),var(--key-y,-18px),0) rotate(var(--key-angle,24deg))}
 .case-unlock-key svg{display:block;width:100%;height:100%;overflow:visible}
 .case-unlock-status{text-align:center;min-height:15px;padding-top:4px;color:#f2bd69;font-size:9px;font-weight:900;letter-spacing:.17em}
 .case-unlock-stage.is-unlocked .case-unlock-aura{background:radial-gradient(ellipse,#f29b3855 0%,#f29b3814 45%,transparent 72%)}
 .case-unlock-stage.is-unlocked .case-unlock-key{opacity:.28;transition:opacity .2s}
-@media(max-width:650px){.case-unlock-stage{padding:12px 8px 9px}.case-unlock-scene{height:176px}.case-unlock-model{width:172px;height:96px;bottom:14px}.case-crate-base{height:76px}.case-unlock-key{top:60%;width:102px}.case-unlock-heading{font-size:9px}}
+@media(max-width:650px){.case-unlock-stage{padding:12px 8px 9px}.case-unlock-scene{height:176px}.case-unlock-model{width:172px;height:96px;bottom:14px}.case-crate-base{height:76px}.case-unlock-key{top:76%;width:102px}.case-unlock-heading{font-size:9px}}
 </style>
 </head>
 <body>
@@ -650,7 +650,7 @@ async function openCase(id){
   result.classList.add("hidden");
   panel.classList.remove("hidden","gold-drop","rare-drop");
   panel.classList.add("is-opening");
-  if(isWeaponCase)resetCaseUnlockStage(c);else if(unlockStage)unlockStage.classList.add("hidden");
+  if(isWeaponCase){resetCaseUnlockStage(c);windowEl.classList.add("hidden")}else{if(unlockStage)unlockStage.classList.add("hidden");windowEl.classList.remove("hidden")}
   panel.scrollIntoView({behavior:"auto",block:"center"});
   // Price refresh must never prevent the opening screen from appearing. Wait briefly, then continue with cached prices.
   try{await Promise.race([refreshMarketPricesForContainer(id),new Promise(resolve=>setTimeout(resolve,1400))])}catch(error){console.warn("Market refresh skipped for opening",error)}
@@ -659,7 +659,7 @@ async function openCase(id){
   if(!prize||!prize.name)throw new Error("Не удалось выбрать предмет из каталога кейса");
   if(state.coins<c.price&&state.freeOpens<1){notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}
   if(state.freeOpens>0)state.freeOpens--;else state.coins-=c.price;state.opens++;charged=true;
-  if(isWeaponCase)await animateCaseUnlock(c);
+  if(isWeaponCase){await animateCaseUnlock(c);windowEl.classList.remove("hidden");panel.scrollIntoView({behavior:"auto",block:"center"})}
   const fallbackPrize=prize;
   const strip=Array.from({length:54},()=>{try{const item=pickSkin(id);return item&&item.name?item:fallbackPrize}catch(error){return fallbackPrize}});
   strip[46]=prize;
@@ -716,7 +716,7 @@ async function openCase(id){
   notify(charged?"Предмет сохранён в инвентарь. Анимация прервалась — попробуй ещё раз.":"Не удалось начать открытие. Кредиты не списаны.");
  }finally{
   if(tickTimer)clearInterval(tickTimer);
-  if(isWeaponCase&&!finished&&unlockStage){unlockStage.classList.add("hidden");unlockStage.classList.remove("is-unlocked");}
+  if(isWeaponCase&&!finished&&unlockStage){unlockStage.classList.add("hidden");unlockStage.classList.remove("is-unlocked");windowEl.classList.remove("hidden")}
   panel.classList.remove("is-opening");opening=false;renderAll();
  }
 }
