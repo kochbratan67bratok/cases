@@ -677,6 +677,7 @@ function showOpeningOverlay(panel){
  openingOverlay.appendChild(panel);openingOverlay.classList.remove("hidden");panel.classList.remove("hidden");
 }
 function closeOpeningOverlay(){
+ if(opening)return;
  if(openingPlaceholder&&openingPlaceholder.parentNode){openingPlaceholder.parentNode.replaceChild(document.getElementById("openingPanel"),openingPlaceholder);openingPlaceholder=null}
  const panel=document.getElementById("openingPanel");if(panel)panel.classList.add("hidden");
  if(openingOverlay)openingOverlay.classList.add("hidden");
@@ -704,8 +705,8 @@ async function openCase(id){
   showOpeningOverlay(panel);
   // Price refresh must never prevent the opening screen from appearing. Wait briefly, then continue with cached prices.
   if(!isDailyCase){try{await Promise.race([refreshMarketPricesForContainer(id),new Promise(resolve=>setTimeout(resolve,1400))])}catch(error){console.warn("Market refresh skipped for opening",error)}}
-  if(isDailyCase&&state.dailyCaseDate===localDateKey()){notify("Ежедневный кейс уже открыт. Возвращайся завтра!");return}
-  if(!isDailyCase&&state.coins<c.price&&state.freeOpens<1){notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}
+  if(isDailyCase&&state.dailyCaseDate===localDateKey()){closeOpeningOverlay();notify("Ежедневный кейс уже открыт. Возвращайся завтра!");return}
+  if(!isDailyCase&&state.coins<c.price&&state.freeOpens<1){closeOpeningOverlay();notify("Не хватает кредитов. Забери ежедневный бонус или продай скин.");return}
   prize=pickSkin(id);
   if(!prize||!prize.name)throw new Error("Не удалось выбрать предмет из каталога кейса");
   if(isDailyCase&&state.dailyCaseDate===localDateKey()){notify("Ежедневный кейс уже открыт. Возвращайся завтра!");return}
