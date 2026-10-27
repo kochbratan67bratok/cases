@@ -385,6 +385,23 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 #caseUnlockStage.kind-patch .case-unlock-model,#caseUnlockStage.kind-charm .case-unlock-model{filter:drop-shadow(0 0 16px rgba(130,150,255,.22));}
 @keyframes capsuleGlimmer{from{opacity:.7;filter:brightness(.9)}to{opacity:1;filter:brightness(1.6)}}
 @keyframes graffitiBurst{0%{opacity:.3;transform:scale(.75)}65%{opacity:1;transform:scale(1.16)}100%{opacity:.9;transform:scale(1)}}
+
+/* High-impact rarity reveal, layered over the existing roulette without blocking controls. */
+#openingPanel.drop-reveal{position:relative;isolation:isolate;animation:dropPanelImpact .48s cubic-bezier(.2,.8,.2,1) both;border-color:var(--drop-color);box-shadow:0 0 0 1px color-mix(in srgb,var(--drop-color) 55%,transparent),0 0 44px color-mix(in srgb,var(--drop-color) 28%,transparent),0 24px 90px #000b}
+#openingPanel.drop-reveal .result-card{animation:dropResultEnter .62s cubic-bezier(.18,.89,.32,1.28) both;border-color:var(--drop-color);box-shadow:0 0 28px color-mix(in srgb,var(--drop-color) 24%,transparent)}
+#openingPanel.drop-reveal .result-art img{animation:dropItemFloat 2s ease-in-out infinite;filter:drop-shadow(0 0 18px var(--drop-color))}
+#openingPanel.drop-tier-gold{--drop-color:#ffd76a}
+.drop-reveal-fx{position:absolute;z-index:8;left:50%;top:58%;width:8px;height:8px;pointer-events:none;transform:translate(-50%,-50%);border-radius:50%}
+.drop-reveal-ring{position:absolute;left:50%;top:50%;width:24px;height:24px;border:2px solid var(--drop-color);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 24px var(--drop-color);animation:dropRingBurst .9s ease-out both}
+.drop-reveal-spark{position:absolute;left:50%;top:50%;width:3px;height:22px;border-radius:5px;background:linear-gradient(to top,transparent,var(--drop-color),#fff);box-shadow:0 0 9px var(--drop-color);transform:rotate(var(--angle)) translateY(calc(-1 * var(--reach)));transform-origin:50% 0;opacity:0;animation:dropSparkBurst .8s var(--spark-delay) ease-out both}
+#openingPanel.drop-tier-epic .drop-reveal-ring,#openingPanel.drop-tier-gold .drop-reveal-ring{animation-duration:1.25s;border-width:3px}
+#openingPanel.drop-tier-gold .drop-reveal-spark{width:4px;height:30px}
+@keyframes dropPanelImpact{0%{transform:scale(.985);filter:brightness(1)}35%{transform:scale(1.012);filter:brightness(1.35)}65%{transform:scale(.998);filter:brightness(1.08)}100%{transform:scale(1);filter:brightness(1)}}
+@keyframes dropResultEnter{0%{opacity:0;transform:translateY(18px) scale(.88)}75%{opacity:1;transform:translateY(-3px) scale(1.025)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes dropItemFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.045)}}
+@keyframes dropRingBurst{0%{opacity:.95;width:20px;height:20px}100%{opacity:0;width:min(78vw,680px);height:min(78vw,680px)}}
+@keyframes dropSparkBurst{0%{opacity:0;translate:0 0;scale:.5}18%{opacity:1}100%{opacity:0;translate:0 -32px;scale:1.2}}
+@media(prefers-reduced-motion:reduce){#openingPanel.drop-reveal,#openingPanel.drop-reveal .result-card,#openingPanel.drop-reveal .result-art img,.drop-reveal-ring,.drop-reveal-spark{animation:none!important}}
 </style>
 </head>
 <body>
@@ -651,8 +668,22 @@ function celebrateCaseLab(kind="rare"){
  for(let i=0;i<42;i++){const bit=document.createElement("i");bit.style.left=(Math.random()*100)+"%";bit.style.background=colors[Math.floor(Math.random()*colors.length)];bit.style.setProperty("--duration",(1.1+Math.random()*1.15)+"s");bit.style.setProperty("--delay",(Math.random()*.22)+"s");bit.style.setProperty("--drift",((Math.random()-.5)*180)+"px");bit.style.setProperty("--spin",(180+Math.random()*900)+"deg");layer.appendChild(bit)}
  document.body.appendChild(layer);setTimeout(()=>layer.remove(),1900);
 }
+function triggerDropReveal(prize,panel){
+ if(!panel||!prize)return;
+ const rank=rarityRank(prize.rarity),type=itemType(prize),gold=type==="knife"||type==="gloves",color=gold?"#ffd76a":(RARITY[prize.rarity]?.color||"#b8ff3b");
+ panel.classList.remove("drop-reveal","drop-tier-rare","drop-tier-epic","drop-tier-gold");
+ panel.style.setProperty("--drop-color",color);
+ panel.classList.add("drop-reveal",gold?"drop-tier-gold":rank>=4?"drop-tier-epic":"drop-tier-rare");
+ const old=panel.querySelector(".drop-reveal-fx");if(old)old.remove();
+ const fx=document.createElement("div");fx.className="drop-reveal-fx";fx.setAttribute("aria-hidden","true");
+ const ring=document.createElement("i");ring.className="drop-reveal-ring";fx.appendChild(ring);
+ for(let i=0;i<(gold?30:rank>=4?24:14);i++){const spark=document.createElement("i");spark.className="drop-reveal-spark";spark.style.setProperty("--angle",(i*360/(gold?30:rank>=4?24:14)+Math.random()*8)+"deg");spark.style.setProperty("--reach",(55+Math.random()*120)+"px");spark.style.setProperty("--spark-delay",(Math.random()*.14)+"s");fx.appendChild(spark)}
+ panel.appendChild(fx);
+ setTimeout(()=>{panel.classList.remove("drop-reveal");fx.remove()},gold?1900:rank>=4?1600:1050);
+ if(gold){playSound("jackpot");celebrateCaseLab("gold")}else if(rank>=4){playSound("win");celebrateCaseLab("rare")}
+}
 function pulseDailyReward(button){if(!button)return;button.classList.remove("reward-pop");void button.offsetWidth;button.classList.add("reward-pop");setTimeout(()=>button.classList.remove("reward-pop"),650);celebrateCaseLab("rare")}
-function playSound(kind="tick"){try{const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime;const tone=(freq,end,delay,duration,peak,type="sine",cutoff=2400)=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(Math.max(1,freq),t+delay);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+delay+duration);filter.type="lowpass";filter.frequency.setValueAtTime(cutoff,t+delay);filter.Q.value=.55;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(peak,t+delay+.006);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);o.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(o);o.onended=()=>{activeSoundNodes.delete(o);try{o.disconnect();filter.disconnect();g.disconnect()}catch(e){}};o.start(t+delay);o.stop(t+delay+duration+.025)};if(kind==="tick"){const f=1450+Math.random()*250;tone(f,f*.48,0,.038,.012,"triangle",2600);tone(190,95,0,.045,.018,"sine",500)}else if(kind==="roll"){tone(920+Math.random()*180,610,0,.026,.0045,"sine",1800)}else if(kind==="unlock"){tone(360,220,0,.11,.026,"triangle",1200);tone(980,620,.025,.085,.012,"sine",2200);tone(1380,760,.055,.05,.006,"sine",2800)}else if(kind==="open"||kind==="container-open"){tone(155,58,0,.24,.042,"sine",520);tone(390,115,.012,.19,.018,"triangle",1050);tone(720,260,.035,.09,.006,"sine",1900)}else if(kind==="capsule-open"){tone(1680,820,0,.055,.014,"triangle",3400);tone(940,1480,.035,.12,.019,"sine",3200);tone(620,1120,.11,.16,.014,"triangle",2600)}else if(kind==="graffiti-open"){tone(520,210,0,.075,.012,"sawtooth",1200);tone(880,1320,.035,.085,.009,"triangle",2500);tone(1320,520,.095,.12,.007,"sine",2800)}else if(kind==="win"){tone(520,880,0,.17,.026,"sine",2200);tone(780,1260,.055,.19,.016,"triangle",2800);tone(1080,1540,.12,.16,.009,"sine",3200)}else if(kind==="rare"){tone(350,175,0,.14,.019,"triangle",900);tone(620,290,.045,.15,.012,"sine",1700)}else{tone(420,240,0,.09,.012,"sine",1400)}}catch(e){console.info("Audio unavailable",e)}}
+function playSound(kind="tick"){try{const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime;const tone=(freq,end,delay,duration,peak,type="sine",cutoff=2400)=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(Math.max(1,freq),t+delay);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+delay+duration);filter.type="lowpass";filter.frequency.setValueAtTime(cutoff,t+delay);filter.Q.value=.55;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(peak,t+delay+.006);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);o.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(o);o.onended=()=>{activeSoundNodes.delete(o);try{o.disconnect();filter.disconnect();g.disconnect()}catch(e){}};o.start(t+delay);o.stop(t+delay+duration+.025)};if(kind==="tick"){const f=1450+Math.random()*250;tone(f,f*.48,0,.038,.012,"triangle",2600);tone(190,95,0,.045,.018,"sine",500)}else if(kind==="roll"){tone(920+Math.random()*180,610,0,.026,.0045,"sine",1800)}else if(kind==="unlock"){tone(360,220,0,.11,.026,"triangle",1200);tone(980,620,.025,.085,.012,"sine",2200);tone(1380,760,.055,.05,.006,"sine",2800)}else if(kind==="open"||kind==="container-open"){tone(155,58,0,.24,.042,"sine",520);tone(390,115,.012,.19,.018,"triangle",1050);tone(720,260,.035,.09,.006,"sine",1900)}else if(kind==="capsule-open"){tone(1680,820,0,.055,.014,"triangle",3400);tone(940,1480,.035,.12,.019,"sine",3200);tone(620,1120,.11,.16,.014,"triangle",2600)}else if(kind==="graffiti-open"){tone(520,210,0,.075,.012,"sawtooth",1200);tone(880,1320,.035,.085,.009,"triangle",2500);tone(1320,520,.095,.12,.007,"sine",2800)}else if(kind==="jackpot"){tone(110,72,0,.32,.045,"sine",420);tone(520,980,.025,.24,.026,"triangle",2400);tone(780,1480,.10,.30,.022,"sine",3200);tone(1240,1860,.22,.28,.014,"triangle",3800)}else if(kind==="win"){tone(520,880,0,.17,.026,"sine",2200);tone(780,1260,.055,.19,.016,"triangle",2800);tone(1080,1540,.12,.16,.009,"sine",3200)}else if(kind==="rare"){tone(350,175,0,.14,.019,"triangle",900);tone(620,290,.045,.15,.012,"sine",1700)}else{tone(420,240,0,.09,.012,"sine",1400)}}catch(e){console.info("Audio unavailable",e)}}
 function rouletteTile(s){return '<div class="roulette-tile" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#b0c3d9")+'">'+skinImage(s)+'<span>'+escapeHtml(s.name)+'</span><small>'+(s.marketPriceUsd>0?"$"+Number(s.marketPriceUsd).toFixed(2):money(s.value)+" CR")+'</small></div>'}
 function resetCaseUnlockStage(c){
  const stage=document.getElementById("caseUnlockStage"),model=document.getElementById("caseUnlockModel"),lid=document.getElementById("caseUnlockLid"),key=document.getElementById("caseUnlockKey");
@@ -788,7 +819,7 @@ async function openCase(id){
   });
   targetTile.classList.add("winner");
   if(tickTimer){clearInterval(tickTimer);tickTimer=null}
-  playSound(rarityRank(prize.rarity)>=4?"win":"rare");panel.classList.remove("is-opening");
+  playSound(rarityRank(prize.rarity)>=4?"win":"rare");triggerDropReveal(prize,panel);panel.classList.remove("is-opening");
   if(!state.inventory.some(x=>x.uid===prize.uid))state.inventory.unshift(prize);
   if(rarityRank(prize.rarity)>=2||itemType(prize)==="knife"||itemType(prize)==="gloves")state.rareDrops++;
   addXP(18);save();renderAll();
