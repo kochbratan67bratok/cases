@@ -123,6 +123,28 @@
 @keyframes upgradeDialGlow{from{filter:brightness(1);box-shadow:0 0 0 7px #ffffff05,0 0 25px #37d98c20}to{filter:brightness(1.2);box-shadow:0 0 0 7px #ffffff08,0 0 42px #37d98c55}}
 @media(max-width:650px){#page-upgrade .upgrade-stage{grid-template-columns:minmax(0,1fr) 84px minmax(0,1fr);gap:7px}#page-upgrade .upgrade-slot{min-height:154px;padding:9px 6px}#page-upgrade .upgrade-slot img{height:78px}#page-upgrade .upgrade-dial{width:78px;height:78px}#page-upgrade .upgrade-dial:before{inset:8px}#page-upgrade .upgrade-dial-needle{height:34px;transform-origin:50% 34px;top:3px;width:3px}#page-upgrade .upgrade-dial-center{width:42px;height:42px;font-size:12px}#page-upgrade .upgrade-dial-label{font-size:8px;letter-spacing:.02em}#page-upgrade #upgradeBtn{width:100%;min-width:0;margin-top:10px}#page-upgrade .upgrade-target-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){#page-upgrade .upgrade-stage.is-spinning .upgrade-slot,#page-upgrade .upgrade-stage.is-spinning .upgrade-dial{animation:none}}
+/* Upgrade skin art fix: reserve a stable frame and always show a fallback if remote thumbnails fail. */
+#page-upgrade .upgrade-slot{position:relative;gap:7px;justify-content:center;align-items:center;min-width:0}
+#page-upgrade .upgrade-slot .skin-art{width:100%;height:112px;display:grid;place-items:center;position:relative;flex:0 0 auto;background:radial-gradient(ellipse at 50% 48%,#354657 0%,#1b2733 58%,#111820 100%);border-radius:8px;overflow:hidden}
+#page-upgrade .upgrade-slot .skin-art img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;padding:7px;filter:drop-shadow(0 8px 9px #0009)}
+#page-upgrade .upgrade-slot .skin-art .skin-fallback{display:grid;place-items:center;width:100%;height:100%;font-size:48px;color:#9aafc3;background:radial-gradient(ellipse at 50% 40%,#3b5063,#1a2631 70%);text-shadow:0 4px 14px #0008}
+#page-upgrade .upgrade-slot .skin-art .skin-fallback[hidden]{display:none!important}
+#page-upgrade .upgrade-slot strong{max-width:100%;overflow-wrap:anywhere}
+#page-upgrade .upgrade-source-picker-button #upgradeSourcePreview .skin-art{width:88px;height:62px;display:grid;place-items:center;flex:0 0 88px;border-radius:7px;background:radial-gradient(ellipse at center,#344657,#151e27 75%);overflow:hidden}
+#page-upgrade .upgrade-source-picker-button #upgradeSourcePreview .skin-art img{width:100%;height:100%;object-fit:contain;padding:4px}
+#page-upgrade .upgrade-source-picker-button #upgradeSourcePreview .skin-fallback{font-size:30px;color:#9aafc3}
+#page-upgrade .upgrade-inventory-option{align-items:stretch;gap:8px;padding:8px;background:linear-gradient(180deg,#1b2732,#111820);border-color:#344657}
+#page-upgrade .upgrade-inventory-option .skin-art{width:100%;height:84px;display:grid;place-items:center;position:relative;overflow:hidden;border-radius:7px;background:radial-gradient(ellipse at center,#344657,#151e27 75%)}
+#page-upgrade .upgrade-inventory-option .skin-art img{width:100%;height:100%;object-fit:contain;padding:5px;filter:drop-shadow(0 5px 7px #0008)}
+#page-upgrade .upgrade-inventory-option .skin-fallback{font-size:37px;color:#9aafc3}
+#page-upgrade .upgrade-target-option{padding:9px;background:linear-gradient(180deg,#1b2732,#111820);border-color:#344657}
+#page-upgrade .upgrade-target-option .skin-art{width:100%;height:92px;display:grid;place-items:center;position:relative;overflow:hidden;border-radius:7px;background:radial-gradient(ellipse at center,#344657,#151e27 75%)}
+#page-upgrade .upgrade-target-option .skin-art img{width:100%;height:100%;object-fit:contain;padding:5px;filter:drop-shadow(0 5px 7px #0008)}
+#page-upgrade .upgrade-target-option .skin-fallback{font-size:39px;color:#9aafc3}
+#page-upgrade .upgrade-target-option .skin-fallback[hidden],#page-upgrade .upgrade-inventory-option .skin-fallback[hidden]{display:none!important}
+#page-upgrade .upgrade-target-option .target-name{min-height:34px;overflow-wrap:anywhere}
+#page-upgrade .upgrade-target-option.selected .skin-art{background:radial-gradient(ellipse at center,#25513f,#14231f 75%)}
+@media(max-width:650px){#page-upgrade .upgrade-slot .skin-art{height:76px}#page-upgrade .upgrade-slot .skin-art .skin-fallback{font-size:34px}#page-upgrade .upgrade-inventory-option .skin-art{height:76px}#page-upgrade .upgrade-target-option .skin-art{height:78px}#page-upgrade .upgrade-source-picker-button #upgradeSourcePreview .skin-art{width:72px;height:56px;flex-basis:72px}}
 </style>
 </head>
 <body>
@@ -343,7 +365,7 @@ function showContainerPreview(id){
  refreshMarketPricesForContainer(id).then(()=>{if(activePreviewContainerId===id){renderContainerPreviewItems(id);renderInventory();renderUpgrade()}})
 }
 function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
-function skinImage(s,cls=""){return s.image?'<img class="'+cls+'" src="'+escapeHtml(s.image)+'" loading="lazy" alt="" referrerpolicy="no-referrer" onerror="this.remove()">':'<span class="skin-fallback">'+escapeHtml(s.icon||"▰")+"</span>"}
+function skinImage(s,cls=""){const fallback=escapeHtml(s.icon||"◈");return s.image?'<span class="skin-art '+escapeHtml(cls)+'"><img src="'+escapeHtml(s.image)+'" loading="lazy" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"><span class="skin-fallback" hidden>'+fallback+'</span></span>':'<span class="skin-art '+escapeHtml(cls)+'"><span class="skin-fallback">'+fallback+"</span></span>"}
 function caseArt(c){const image=c.image?'<img src="'+escapeHtml(c.image)+'" loading="lazy" alt="" onerror="this.remove()">':'<span class="case-glyph" style="color:'+c.theme+'">'+c.glyph+"</span>";return '<div class="case-art" style="background:radial-gradient(ellipse at 50% 40%,'+c.theme+'55 0%,#293441 45%,#1b232d 80%)"><span class="case-label">'+c.tag+"</span>"+image+"</div>"}
 function caseCard(c){return '<article class="case-card" data-case-card="'+escapeHtml(c.id)+'" tabindex="0" role="button" aria-label="Посмотреть содержимое кейса '+escapeHtml(c.name)+'">'+caseArt(c)+'<h3>'+escapeHtml(c.name)+'</h3><p>'+escapeHtml(c.desc)+'</p><div class="case-bottom"><span class="case-price">◈ '+money(c.price)+' CR</span><button data-preview-container="'+escapeHtml(c.id)+'">Содержимое</button><button class="primary" data-preview-container="'+escapeHtml(c.id)+'">'+(c.kind==="capsule"?"Выбрать капсулу":c.kind==="patch"?"Выбрать набор":"Выбрать кейс")+"</button></div><div class=\"case-card-hint\">Нажми, чтобы посмотреть дропы и открыть</div></article>"}
 function renderCases(){
