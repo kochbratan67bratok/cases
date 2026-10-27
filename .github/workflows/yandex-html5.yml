@@ -2,7 +2,7 @@ name: Validate Yandex Games HTML5
 
 on:
   push:
-    branches: [main, feature/yandex-games-html5]
+    branches: [main, "codex/**", feature/yandex-games-html5]
     paths:
       - "index.html"
       - "README.md"
@@ -64,8 +64,11 @@ jobs:
       - name: Verify platform integration hooks
         run: |
           grep -q 'YaGames.init' index.html
-          grep -q 'showRewardedVideo' index.html
+          grep -q 'showBannerAdv' index.html
+          grep -q 'LoadingAPI' index.html
+          grep -q 'game_api_pause' index.html
+          grep -q 'game_api_resume' index.html
           grep -q 'getData' index.html
           grep -q 'setData' index.html
           grep -q 'localStorage' index.html
-          echo "Yandex SDK, rewarded ads and saves found"
+          echo "Yandex SDK, banner integration, lifecycle hooks and saves found"
