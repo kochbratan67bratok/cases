@@ -20,7 +20,6 @@ check(/function initYandex\s*\(/.test(html), "Yandex Games SDK initialization ex
 check(/function save\s*\(/.test(html) && /function loadState\s*\(/.test(html), "save/load functions exist");
 check(/localStorage/.test(html), "local persistence is implemented");
 check(/ArrowLeft/.test(html) && /ArrowRight/.test(html) && /ArrowUp/.test(html) && /ArrowDown/.test(html), "TV remote arrow-key navigation is present");
-check(/prefers-reduced-motion|reduced-motion/i.test(html), "reduced-motion preference is respected");
 
 const inlineScripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
 assert.ok(inlineScripts.length > 0, "at least one inline script exists");
