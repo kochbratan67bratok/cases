@@ -42,11 +42,11 @@ for (const [index, match] of inlineScripts.entries()) {
   console.log(`✓ inline script ${index + 1} has valid JavaScript syntax`);
 }
 
-const stateBlock = html.match(/function freshState\\([\\s\\S]*?let state=loadState\\(\\);/);
+const stateBlock = html.match(/function freshState\([\s\S]*?let state=loadState\(\);/);
 assert.ok(stateBlock, "state initialization block can be isolated for logic tests");
 const sandbox = { localStorage: { getItem: () => null } };
 sandbox.globalThis = sandbox;
-vm.runInNewContext(stateBlock[0] + "\\nglobalThis.__normalizeState = normalizeState;", sandbox);
+vm.runInNewContext(stateBlock[0] + "\nglobalThis.__normalizeState = normalizeState;", sandbox);
 const normalizeState = sandbox.__normalizeState;
 const normalized = normalizeState({
   coins: -20,
