@@ -37,6 +37,8 @@ check(/game_api_pause/.test(html) && /game_api_resume/.test(html), "Yandex Games
 check(/function stopAllSounds\s*\(/.test(html), "audio can be stopped when the game loses focus");
 check(/function save\s*\(/.test(html) && /function loadState\s*\(/.test(html), "save/load functions exist");
 check(/function normalizeState\s*\(/.test(html), "local and cloud saves are normalized before use");
+check(/PASS_REWARDS=Array\.from\(\{length:100\}/.test(html), "battle pass contains 100 reward tiers");
+check(/reward\.item==="jackpot"/.test(html) && /state\.passSeason=\(state\.passSeason\|\|1\)\+1/.test(html), "tier 100 grants a jackpot skin and starts the next season");
 check(/localStorage/.test(html), "local persistence is implemented");
 check(/state\.coins===freshState\(\)\.coins/.test(html), "cloud save restore matches the actual fresh-state balance");
 check(/prefers-reduced-motion/.test(html), "reduced-motion preference is respected");
@@ -75,7 +77,7 @@ assert.equal(normalized.coins, 0, "negative credits are clamped");
 assert.equal(normalized.xp, 0, "invalid XP falls back safely");
 assert.equal(normalized.inventory.length, 1, "malformed inventory entries are discarded");
 assert.equal(normalized.inventory[0].value, 45, "inventory values are normalized to numbers");
-assert.deepEqual(Array.from(normalized.claimedPass), [1], "battle-pass claims are deduplicated and bounded");
+assert.deepEqual(Array.from(normalized.claimedPass), [1, 31], "battle-pass claims are deduplicated and bounded to 100 levels");
 assert.deepEqual(Array.from(normalized.missionClaims), ["open3"], "mission claims are deduplicated and type-checked");
 console.log("✓ saved-state normalization logic tests passed");
 
