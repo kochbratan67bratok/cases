@@ -314,29 +314,35 @@ async function loadContainerCatalog(){
   containerCatalogStatus="online";renderCases();console.info("Container catalog loaded",rows.length,"rows; additions",added,"existing matched",skippedExisting,"cases",CASES.length,"capsules and packs",CAPSULES.length)
  }catch(e){containerCatalogStatus="fallback";console.info("Using fallback container catalog",e)}
 }
-async function initYandex(){try{if(!window.YaGames)return;const sdk=await YaGames.init();window.ygSdk=sdk;try{sdk.features?.LoadingAPI?.ready()}catch(e){}try{cloudPlayer=await sdk.getPlayer({scopes:false});if(cloudPlayer?.getData){const cloud=await cloudPlayer.getData(["caseLabRebuildV1"]);const remote=cloud?.caseLabRebuildV1;if(remote&&typeof remote==="object"&&(!state.opens&&!state.inventory.length&&state.coins===1000)){state={...freshState(),...remote};save();renderAll()}}}catch(e){console.info("Cloud save unavailable",e)}try{if(sdk.adv?.getBannerAdvStatus&&sdk.adv?.showBannerAdv){const banner=await sdk.adv.getBannerAdvStatus();if(!banner.stickyAdvIsShowing)await sdk.adv.showBannerAdv()}}catch(e){console.info("Sticky banner unavailable",e)}}catch(e){console.info("Yandex Games SDK not available in this preview",e)}}
+async function initYandex(){try{if(!window.YaGames)return;const sdk=await YaGames.init();window.ygSdk=sdk;try{sdk.features?.LoadingAPI?.ready()}catch(e){}try{cloudPlayer=await sdk.getPlayer({scopes:false});if(cloudPlayer?.getData){const cloud=await cloudPlayer.getData(["caseLabRebuildV1"]);const remote=cloud?.caseLabRebuildV1;if(remote&&typeof remote==="object"&&(!state.opens&&!state.inventory.length&&state.coins===freshState().coins)){state={...freshState(),...remote};save();renderAll()}}}catch(e){console.info("Cloud save unavailable",e)}try{if(sdk.adv?.getBannerAdvStatus&&sdk.adv?.showBannerAdv){const banner=await sdk.adv.getBannerAdvStatus();if(!banner.stickyAdvIsShowing)await sdk.adv.showBannerAdv()}}catch(e){console.info("Sticky banner unavailable",e)}}catch(e){console.info("Yandex Games SDK not available in this preview",e)}}
 const fullscreenToggle=document.getElementById("fullscreenToggle");if(fullscreenToggle)fullscreenToggle.addEventListener("click",async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen()}else{await document.exitFullscreen()}}catch(e){notify("Полноэкранный режим недоступен в этом браузере.")}});document.addEventListener("fullscreenchange",()=>{if(fullscreenToggle)fullscreenToggle.setAttribute("aria-label",document.fullscreenElement?"Выйти из полноэкранного режима":"Полноэкранный режим")});
 
 // TV/remote keyboard navigation: use arrow keys to move between visible interactive controls.
 document.addEventListener("keydown",e=>{
- if(window.matchMedia("(min-width: 1100px)").matches && ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
-  const active=document.activeElement;
-  if(!(active instanceof HTMLElement) || !active.matches("button,[role=button],a[href],input,select"))return;
-  const candidates=[...document.querySelectorAll("button:not(:disabled),[role=button],a[href],input:not(:disabled),select:not(:disabled)")]
-   .filter(el=>el instanceof HTMLElement && el.offsetWidth>0 && el.offsetHeight>0 && el!==active);
-  const a=active.getBoundingClientRect(), ax=a.left+a.width/2, ay=a.top+a.height/2;
-  const dirs={"ArrowLeft":[-1,0],"ArrowRight":[1,0],"ArrowUp":[0,-1],"ArrowDown":[0,1]};
-  const [dx,dy]=dirs[e.key];
-  let best=null,bestScore=Infinity;
-  for(const el of candidates){
-   const r=el.getBoundingClientRect(), x=r.left+r.width/2-ax,y=r.top+r.height/2-ay;
-   const forward=x*dx+y*dy, lateral=Math.abs(x*dy-y*dx);
-   if(forward<=0)continue;
-   const score=forward+lateral*2.4;
-   if(score<bestScore){bestScore=score;best=el}
+ if(!window.matchMedia("(min-width: 1100px)").matches || !["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key))return;
+ const selector="button:not(:disabled),[role=button],a[href],input:not(:disabled),select:not(:disabled)";
+ const controls=[...document.querySelectorAll(selector)].filter(el=>el instanceof HTMLElement&&el.offsetWidth>0&&el.offsetHeight>0);
+ let active=document.activeElement;
+ if(!(active instanceof HTMLElement)||!active.matches(selector)){
+  if(e.key==="ArrowDown"||e.key==="ArrowRight"){
+   const first=controls[0];
+   if(first){e.preventDefault();first.focus({preventScroll:true});first.scrollIntoView({block:"nearest",inline:"nearest",behavior:"auto"})}
   }
-  if(best){e.preventDefault();best.focus({preventScroll:true});best.scrollIntoView({block:"nearest",inline:"nearest",behavior:"auto"})}
+  return;
  }
+ const candidates=controls.filter(el=>el!==active);
+ const a=active.getBoundingClientRect(), ax=a.left+a.width/2, ay=a.top+a.height/2;
+ const dirs={"ArrowLeft":[-1,0],"ArrowRight":[1,0],"ArrowUp":[0,-1],"ArrowDown":[0,1]};
+ const [dx,dy]=dirs[e.key];
+ let best=null,bestScore=Infinity;
+ for(const el of candidates){
+  const r=el.getBoundingClientRect(), x=r.left+r.width/2-ax,y=r.top+r.height/2-ay;
+  const forward=x*dx+y*dy, lateral=Math.abs(x*dy-y*dx);
+  if(forward<=0)continue;
+  const score=forward+lateral*2.4;
+  if(score<bestScore){bestScore=score;best=el}
+ }
+ if(best){e.preventDefault();best.focus({preventScroll:true});best.scrollIntoView({block:"nearest",inline:"nearest",behavior:"auto"})}
 });
 
 document.addEventListener("click",e=>{const open=e.target.closest("[data-open-case]");if(open){openCase(open.dataset.openCase);return}const preview=e.target.closest("[data-preview-container]");if(preview){showContainerPreview(preview.dataset.previewContainer);return}});
