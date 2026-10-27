@@ -17,6 +17,9 @@ This checklist distinguishes automated checks from tests that must be run in the
 - [ ] Confirm insufficient-credit actions do not consume credits or change inventory.
 - [ ] Sell one item and all items; verify the credited amounts and inventory count.
 - [ ] Complete an upgrade successfully and unsuccessfully; verify the source item is consumed exactly once.
+- [ ] Check upgrade multipliers x1, x1.5, x2–x10, selected target price, displayed success chance, wheel result colors, and success/failure inventory changes.
+- [ ] Scroll through the case/capsule catalog on a phone; verify 24-item batches remain responsive and “show more” appends the next batch.
+- [ ] Verify skin and catalog-container prices are stable after reload and differ by item.
 - [ ] Complete a five-item contract with matching rarity; verify invalid selections are rejected and items are not duplicated.
 - [ ] Claim each mission and battle-pass reward once; verify locked or already-claimed rewards cannot be claimed.
 - [ ] Claim the daily reward, reload, and confirm it cannot be claimed twice on the same local date.
