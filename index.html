@@ -319,7 +319,7 @@ function catalogCasePrice(name,kind){
  return range[0]+hash%(range[1]-range[0]+1)
 }
 async function loadSkinCatalog(){
- const cacheKey="caseLab.catalog.cache.v3";
+ const cacheKey="caseLab.catalog.cache.v4";
  try{
   let normalized=null,crateImages=null;
   try{const cached=JSON.parse(localStorage.getItem(cacheKey)||"null");if(cached&&cached.time>Date.now()-7*86400000&&Array.isArray(cached.items)){normalized=cached.items;crateImages=cached.crates||{}}}catch(e){}
