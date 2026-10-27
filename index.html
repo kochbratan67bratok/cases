@@ -197,7 +197,7 @@ function itemType(s){if(s.type)return s.type;const n=String(s.name||"");if(/^Sti
 function makeDrop(base,caseId){
  const drop={...base,uid:uid(),obtained:Date.now(),caseId,type:itemType(base)};
  const wears=Array.isArray(base.marketWearPrices)?base.marketWearPrices.filter(x=>x&&x.price>0):[];
- if(wears.length&&itemType(base)==="weapon"&&!/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)$/i.test(String(base.marketName||""))){
+ if(wears.length&&["weapon","knife","gloves"].includes(itemType(base))&&!/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)$/i.test(String(base.marketName||""))){
   const weights={"Factory New":3,"Minimal Wear":12,"Field-Tested":30,"Well-Worn":24,"Battle-Scarred":31};
   const available=wears.map(x=>({value:x,weight:weights[x.wear]||1}));
   const chosen=pickWeighted(available);
