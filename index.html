@@ -169,6 +169,103 @@
 #page-upgrade .upgrade-inventory-option>span:not(.skin-art){font-size:10px;line-height:1.25;overflow-wrap:anywhere}
 #page-upgrade .upgrade-inventory-option .skin-value{font-size:10px}
 @media(max-width:650px){#page-upgrade .upgrade-target-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:280px}#page-upgrade .upgrade-inventory-options{grid-template-columns:repeat(2,minmax(0,1fr));max-height:230px}#page-upgrade .upgrade-inventory-picker{max-height:300px}#page-upgrade .upgrade-target-option .skin-art{height:62px;min-height:62px}}
+
+/* CASE LAB UI refresh — original game logic and IDs preserved */
+:root{--bg:#090d12;--surface:#101720;--surface-2:#151f2b;--surface-3:#1d2a38;--line:#263544;--text:#f3f7fb;--muted:#8c9baa;--orange:#b8ff3b;--orange-2:#d0ff79;--green:#9cff43;--gold:#d9ff78;--radius:16px}
+body{background:radial-gradient(ellipse at 50% -20%,#1b2b35 0%,#090d12 56%);background-attachment:fixed}
+button{border-radius:11px;border-color:#2b3b4b;background:linear-gradient(180deg,#192431,#121a24);font-weight:700}
+button:hover{border-color:#9cff4366;background:#1c2b37}
+.primary{background:var(--orange);border-color:var(--orange);color:#11170b;box-shadow:0 5px 18px #b8ff3b1c}
+.primary:hover{background:var(--orange-2);border-color:var(--orange-2)}
+.shell{max-width:1380px;padding-left:clamp(14px,3vw,38px);padding-right:clamp(14px,3vw,38px)}
+.topbar{height:78px;border-bottom:1px solid #ffffff12;position:relative}
+.topbar:after{content:"";position:absolute;bottom:-1px;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent,#b8ff3b40,transparent);pointer-events:none}
+.brand{font-size:20px;letter-spacing:.08em}
+.brand-mark{border-radius:11px;background:var(--orange);box-shadow:0 0 26px #b8ff3b20;color:#0b1008}
+.mainnav{gap:4px}
+.mainnav button{border-radius:10px;padding:11px 13px;color:#9aa9b8;font-size:13px}
+.mainnav button.active{background:#b8ff3b12;border-color:#b8ff3b2c;color:var(--orange-2);box-shadow:inset 0 0 0 1px #b8ff3b08}
+.wallet{background:#111a23;border-color:#334454;border-radius:12px;padding:9px 13px}
+.wallet b{color:var(--orange)}
+.page{padding-top:30px}
+.page-heading{margin-bottom:25px}
+.page-heading h1{font-size:clamp(28px,4vw,39px);letter-spacing:-.055em}
+.eyebrow{color:var(--orange);letter-spacing:.17em}
+.hero{min-height:320px;border-radius:22px;border-color:#ffffff13;background:radial-gradient(ellipse at 78% 50%,#293b35 0%,transparent 42%),linear-gradient(112deg,#17232d 0%,#121a22 60%,#1d251e 100%);box-shadow:0 24px 70px #0003;padding:clamp(26px,5vw,62px)}
+.hero:after{border-color:#b8ff3b20;box-shadow:0 0 0 42px #b8ff3b06,0 0 0 84px #b8ff3b04}
+.hero h1{font-size:clamp(38px,5.5vw,64px);line-height:.98}
+.hero h1 em{color:var(--orange)}
+.hero p{color:#a9b8c5;line-height:1.7}
+.hero-art .big-crate{border-radius:18px;background:linear-gradient(145deg,#34434d,#1b2931 60%,#111a20);border-color:#a4ff4c55;box-shadow:18px 24px 60px #0008,inset 0 0 0 7px #ffffff05,0 0 50px #b8ff3b0b}
+.big-crate:before,.big-crate:after{background:linear-gradient(180deg,#d0ff79,#7bbd27)}
+.crate-symbol{color:#c9ff6d;filter:drop-shadow(0 8px 16px #b8ff3b25)}
+.hero-tag{border-color:#b8ff3b35;color:#d8ff9d;background:#101911}
+.stats{gap:12px;margin:0 0 30px}
+.stat,.panel,.pass-hero{background:linear-gradient(145deg,#131d27,#0f161e);border:1px solid #283846;border-radius:15px;box-shadow:0 8px 25px #0002}
+.stat{padding:17px 18px;position:relative;overflow:hidden}
+.stat:after{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#b8ff3b70,transparent)}
+.stat-label{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#8c9baa}
+.stat-value{font-size:24px;letter-spacing:-.04em}
+.section-title{margin:30px 0 15px}
+.section-title h2{font-size:20px;letter-spacing:-.035em}
+.case-grid{gap:14px}
+.case-card{background:linear-gradient(155deg,#17222d,#10161e 78%);border:1px solid #2b3b49;border-radius:16px;padding:13px;box-shadow:0 9px 25px #0002;transition:transform .18s,border-color .18s,box-shadow .18s}
+.case-card:hover{transform:translateY(-3px);border-color:#b8ff3b55;box-shadow:0 15px 32px #0005,0 0 0 1px #b8ff3b08}
+.case-art{height:158px;border-radius:11px;background:radial-gradient(ellipse at 50% 40%,#2b3b46,#111820 70%);border:1px solid #ffffff08;overflow:hidden}
+.case-glyph{filter:drop-shadow(0 8px 12px #0009);text-shadow:0 0 26px #b8ff3b1c}
+.case-card h3{font-size:15px;letter-spacing:-.02em}
+.case-card p{color:#8f9eac;line-height:1.45}
+.case-price{color:#d7ff92}
+.case-bottom button{border-radius:9px}
+.case-load-more{border-radius:12px}
+.toolbar{padding:12px;background:#0f171f;border:1px solid #263644;border-radius:14px;margin-bottom:16px}
+input,select{background:#0b1118!important;border:1px solid #2a3a49!important;border-radius:10px!important;color:var(--text)}
+input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!important}
+.filter-btn.active{background:#b8ff3b18;border-color:#b8ff3b50;color:#d4ff8d}
+.inventory-grid{gap:13px}
+.skin-card{background:linear-gradient(155deg,#17222c,#0f161e);border:1px solid #293947;border-radius:14px;overflow:hidden}
+.skin-image{background:radial-gradient(ellipse at center,#273844,#111820 70%);border-bottom:1px solid #ffffff08}
+.skin-content{padding:12px}
+.skin-name{font-size:12px;line-height:1.4}
+.skin-value{color:#d4ff8a}
+.skin-actions button{border-radius:9px}
+.two-col{gap:16px;align-items:start}
+.panel{padding:18px}
+.upgrade-stage{padding:16px;border-radius:14px;background:linear-gradient(135deg,#0b1118,#111b24);border:1px solid #263644}
+.upgrade-slot{background:#111a23;border:1px solid #304251;border-radius:13px}
+.upgrade-multiplier-wrap{margin-top:17px}
+.upgrade-multipliers button{border-radius:9px}
+.upgrade-multipliers button.active{background:#b8ff3b1a;border-color:#b8ff3b80;color:#d7ff9b;box-shadow:inset 0 0 0 1px #b8ff3b12}
+.upgrade-target-picker{margin-top:16px}
+.upgrade-target-picker-button{border-radius:11px}
+#page-upgrade .upgrade-target-picker-button{background:#121d26;border-color:#344653}
+#page-upgrade .upgrade-target-picker-body{background:#0b1219;border-color:#2c3c49}
+.upgrade-target-option,.upgrade-inventory-option{background:#131e28;border-color:#2b3a47;border-radius:10px}
+.upgrade-target-option.selected,.upgrade-inventory-option.selected{border-color:#b8ff3b!important;box-shadow:0 0 0 1px #b8ff3b35}
+.upgrade-dial-label{color:#a2b1bf}
+.progress{background:#25323d;border-radius:99px;overflow:hidden}
+.progress span{background:linear-gradient(90deg,#7fca2b,#d1ff7a);box-shadow:0 0 12px #b8ff3b25}
+.pass-hero{padding:24px;background:radial-gradient(ellipse at 90% 50%,#283a25,#101821 52%)}
+.level-badge{background:linear-gradient(145deg,#d5ff80,#7ebc2b);color:#12190a;border-radius:18px;box-shadow:0 0 30px #b8ff3b1e}
+.mission-list .panel,.mission-list>div{border-radius:13px}
+.roulette-box{border:1px solid #334553;border-radius:17px;background:#0c131a;box-shadow:0 20px 50px #0005}
+.roulette-head{color:#c5ff7c}
+.roulette-window{border-color:#b8ff3b44;background:#080d12}
+.result-card{border-color:#b8ff3b55;background:#121c22;border-radius:14px}
+.preview-modal{backdrop-filter:blur(12px);background:#05090dd9}
+.preview-dialog{background:#0e161f;border:1px solid #344553;border-radius:18px;box-shadow:0 28px 90px #000b}
+.preview-head{border-bottom:1px solid #ffffff12}
+.preview-items{gap:10px}
+.preview-footer{border-top:1px solid #ffffff12}
+.bottom-nav{background:#0a1017ed;border-top:1px solid #2b3b48;backdrop-filter:blur(18px);padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav button{color:#7f8e9d;border-radius:10px}
+.bottom-nav button.active{color:#d5ff8a;background:#b8ff3b12}
+#dailyBtn{min-width:170px}
+#page-home .panel:has(#dailyBtn){background:radial-gradient(ellipse at 95% 50%,#293c22,#111a22 55%);border-color:#46583a;padding:22px}
+#page-home .panel:has(#dailyBtn):before{content:"DAILY REWARD  /  24H";display:block;width:100%;font-size:10px;font-weight:900;letter-spacing:.17em;color:#caff83;margin-bottom:8px}
+@media(max-width:900px){.shell{padding-left:16px;padding-right:16px}.case-grid{gap:10px}.case-art{height:132px}.topbar{height:68px}}
+@media(max-width:650px){.shell{padding:0 12px 100px}.topbar{height:60px}.page{padding-top:20px}.hero{border-radius:17px;padding:23px 18px 15px;gap:0}.hero h1{font-size:clamp(36px,10vw,44px)}.hero-art .big-crate{width:205px}.stats{gap:8px}.stat{padding:12px}.stat-value{font-size:20px}.section-title{margin:24px 0 12px}.section-title h2{font-size:17px}.case-grid{gap:9px}.case-card{padding:8px;border-radius:12px}.case-art{height:104px}.case-card h3{font-size:12px}.case-bottom button{padding:9px 7px}.panel{padding:12px}.upgrade-stage{padding:9px;gap:7px}.upgrade-dial{max-width:72px;max-height:72px}.upgrade-slot{min-height:112px}.bottom-nav{padding-top:7px}.preview-dialog{border-radius:16px}}
+
 </style>
 </head>
 <body>
@@ -176,7 +273,7 @@
 <header class="topbar">
 <a class="brand" href="#" onclick="go('home');return false"><span class="brand-mark">C</span><span>CASE LAB<small>CS2 CASE SIMULATOR</small></span></a>
 <nav class="mainnav" aria-label="Основная навигация">
-<button class="active" data-page="home">Главная</button><button data-page="cases">Кейсы</button><button data-page="inventory">Инвентарь</button><button data-page="pass">Пропуск</button><button data-page="upgrade">Апгрейд</button>
+<button class="active" data-page="home">Главная</button><button data-page="cases">Магазин</button><button data-page="inventory">Инвентарь</button><button data-page="pass">Пропуск</button><button data-page="upgrade">Апгрейд</button>
 </nav>
 <div class="account"><button id="fullscreenToggle" class="fullscreen-toggle" type="button" aria-label="Полноэкранный режим" title="Полноэкранный режим">⛶</button><div class="wallet"><b>◈</b> <span id="coins">1 000</span> CR</div><div class="profile-level">LVL <strong id="levelTop">1</strong></div></div>
 </header>
@@ -218,7 +315,7 @@
 </main>
 <footer class="footer"><span>CASE LAB — фанатский симулятор. Не связан с Valve.</span><span>Виртуальные предметы и кредиты не имеют денежной стоимости.</span></footer>
 </div>
-<nav class="bottom-nav" id="bottomNav" aria-label="Мобильная навигация"><button class="active" data-page="home"><span>⌂</span>Главная</button><button data-page="cases"><span>▣</span>Кейсы</button><button data-page="inventory"><span>▤</span>Скины</button><button data-page="pass"><span>★</span>Пропуск</button><button data-page="upgrade"><span>⇧</span>Апгрейд</button></nav>
+<nav class="bottom-nav" id="bottomNav" aria-label="Мобильная навигация"><button class="active" data-page="home"><span>⌂</span>Главная</button><button data-page="cases"><span>▣</span>Магазин</button><button data-page="inventory"><span>▤</span>Скины</button><button data-page="pass"><span>★</span>Пропуск</button><button data-page="upgrade"><span>⇧</span>Апгрейд</button></nav>
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div><div id="previewModal" class="preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-dialog"><div class="preview-head"><div><div class="eyebrow" id="previewType">CONTENTS</div><h2 id="previewTitle">Содержимое</h2><p id="previewDesc" class="muted tiny"></p></div><button id="closePreview" aria-label="Закрыть">✕</button></div><div id="previewOdds" class="preview-odds"></div><h3 class="preview-section-title">Что может выпасть</h3><p id="previewCatalogNote" class="preview-catalog-note"></p><div id="previewItems" class="preview-items"></div><div class="preview-footer"><span class="muted tiny">Виртуальные предметы и шансы симулятора.</span><button id="previewOpen" class="primary">Открыть</button></div></div></div>
 <script>
 "use strict";
