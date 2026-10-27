@@ -1,0 +1,33 @@
+name: Build Yandex Games upload ZIP
+
+on:
+  push:
+    branches: ["codex/production-readiness"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-game:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out patch branch
+        uses: actions/checkout@v4
+      - name: Prepare upload archive
+        run: |
+          mkdir -p dist
+          cp index.html dist/index.html
+          cd dist
+          zip -9 ../CASE-LAB-yandex-upload.zip index.html
+          cd ..
+          unzip -l CASE-LAB-yandex-upload.zip
+          test "$(unzip -Z1 CASE-LAB-yandex-upload.zip | grep -xc 'index.html')" -eq 1
+          test "$(stat -c%s index.html)" -lt 104857600
+      - name: Upload ready-to-upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: CASE-LAB-yandex-upload
+          path: CASE-LAB-yandex-upload.zip
+          if-no-files-found: error
+          retention-days: 14
