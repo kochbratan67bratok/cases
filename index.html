@@ -194,7 +194,17 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function rarityRank(r){return RARITY[r]?.rank??0}
 function pickWeighted(entries){let n=Math.random()*entries.reduce((sum,x)=>sum+x.weight,0);for(const e of entries){n-=e.weight;if(n<=0)return e.value}return entries[entries.length-1].value}
 function itemType(s){if(s.type)return s.type;const n=String(s.name||"");if(/^Sticker \\| |^Autograph \\| /i.test(n))return "sticker";if(/^Patch \\| /i.test(n))return "patch";if(/^Charm \\| /i.test(n))return "charm";if(/gloves|hand wraps|перчатк/i.test(n))return "gloves";if(/knife|bayonet|karambit|butterfly|daggers|kukri|talon|ursus|navaja|stiletto|falchion|bowie|skeleton knife|paracord|survival knife|nomad knife|shadow daggers|★/i.test(n))return "knife";return "weapon"}
-function makeDrop(base,caseId){return {...base,uid:uid(),obtained:Date.now(),caseId,type:itemType(base)}}
+function makeDrop(base,caseId){
+ const drop={...base,uid:uid(),obtained:Date.now(),caseId,type:itemType(base)};
+ const wears=Array.isArray(base.marketWearPrices)?base.marketWearPrices.filter(x=>x&&x.price>0):[];
+ if(wears.length&&itemType(base)==="weapon"&&!/\\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$/i.test(String(base.marketName||""))){
+  const weights={"Factory New":3,"Minimal Wear":12,"Field-Tested":30,"Well-Worn":24,"Battle-Scarred":31};
+  const available=wears.map(x=>({value:x,weight:weights[x.wear]||1}));
+  const chosen=pickWeighted(available);
+  if(chosen){drop.wear=chosen.wear;drop.marketPriceUsd=chosen.price;drop.marketPriceName=chosen.marketHashName;drop.marketPriceUpdatedAt=chosen.updatedAt||base.marketPriceUpdatedAt;drop.name=String(base.name||"").replace(/\\s*\\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$/i,"")+" ("+chosen.wear+")";drop.marketName=chosen.marketHashName;drop.value=Math.max(1,Math.round(chosen.price*1000))}
+ }
+ return drop
+}
 function pickSkin(caseId){
  const actualLoot=CONTAINER_LOOT[caseId];
  if(actualLoot&&actualLoot.common.length){const common=actualLoot.common;const rare=actualLoot.rare||[];if(rare.length&&Math.random()<0.0026)return makeDrop(rare[Math.floor(Math.random()*rare.length)],caseId);if(CAPSULES.some(x=>x.id===caseId)){const capsuleOdds={"high-grade":80.1282,"remarkable":16.0256,"exotic":3.2051,"extraordinary":0.641};const tiers=Object.keys(capsuleOdds).filter(t=>common.some(x=>x.cs2Tier===t));if(tiers.length){const tier=pickWeighted(tiers.map(t=>({value:t,weight:capsuleOdds[t]})));const pool=common.filter(x=>x.cs2Tier===tier);return makeDrop(pool[Math.floor(Math.random()*pool.length)],caseId)}}const tierOdds={"consumer":79.92,"industrial":15.98,"mil-spec":79.92,"restricted":15.98,"remarkable":16.0256,"classified":3.20,"exotic":3.2051,"covert":0.64,"extraordinary":0.641,"contraband":0.641,"high-grade":80.1282};const available=Object.keys(tierOdds).filter(t=>common.some(x=>x.cs2Tier===t));let chosen;if(available.length){const tier=pickWeighted(available.map(t=>({value:t,weight:tierOdds[t]})));const pool=common.filter(x=>x.cs2Tier===tier);chosen=pool[Math.floor(Math.random()*pool.length)]}else chosen=common[Math.floor(Math.random()*common.length)];return makeDrop(chosen,caseId)}
@@ -210,9 +220,13 @@ function pickSkin(caseId){
  return makeDrop(pool[Math.floor(Math.random()*pool.length)],caseId)
 }
 function containerOdds(id,isCapsule){const data=CONTAINER_LOOT[id];if(!data)return isCapsule?[["Обычный",80.1282],["Редкий",16.0256],["Эпический",3.2051],["Легендарный",0.641]]:[["Синий · Mil-Spec",79.92],["Фиолетовый · Restricted",15.98],["Розовый · Classified",3.20],["Красный · Covert",0.64],["★ Ножи / перчатки",0.26]];const tiers=[["consumer","Обычный",79.92],["industrial","Промышленный",15.98],["mil-spec","Синий",79.92],["restricted","Фиолетовый",15.98],["remarkable","Редкий",16.0256],["classified","Розовый",3.20],["exotic","Эпический",3.2051],["covert","Красный",0.64],["extraordinary","Легендарный",0.641],["contraband","Контрабанда",0.641]];const found=tiers.filter(([t])=>(data.common||[]).some(x=>x.cs2Tier===t));if(!found.length)return [["Предметов в пуле",(data.common||[]).length],["Редких предметов",(data.rare||[]).length]];const total=found.reduce((n,x)=>n+x[2],0);return found.map(([t,label,w])=>[label,Math.round(w/total*10000)/100])}
-function marketPriceLabel(item){return Number.isFinite(Number(item?.marketPriceUsd))&&Number(item.marketPriceUsd)>0?"от $"+Number(item.marketPriceUsd).toFixed(2)+" USD":"Рыночная цена не найдена"}
-function setMarketPrice(item,quote){if(!item||!quote||!Number.isFinite(quote.price)||quote.price<=0)return;item.marketPriceUsd=quote.price;item.marketPriceName=quote.marketHashName||item.marketName||item.name;item.marketPriceUpdatedAt=quote.updatedAt||new Date().toISOString();item.value=Math.max(1,Math.round(quote.price*1000))}
-function marketVariants(item){const base=String(item.marketName||item.name||"").trim();if(!base)return [];if(item.type==="sticker"||item.type==="patch"||item.type==="charm"||/^(sticker|autograph|patch|charm)\s*\|/i.test(base))return [base];if(/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)$/i.test(base))return [base];return ["Field-Tested","Minimal Wear","Well-Worn","Factory New","Battle-Scarred"].map(wear=>base+" ("+wear+")")}
+const MARKET_WEAR_ORDER=["Factory New","Minimal Wear","Field-Tested","Well-Worn","Battle-Scarred"];
+const DOPPLER_PATTERNS=["Phase 1","Phase 2","Phase 3","Phase 4","Ruby","Sapphire","Black Pearl","Emerald"];
+function marketPriceLabel(item){return Number.isFinite(Number(item?.marketPriceUsd))&&Number(item.marketPriceUsd)>0?"$"+Number(item.marketPriceUsd).toFixed(2)+" USD"+(item.wear?" · "+item.wear:"")+(item.marketPattern?" · "+item.marketPattern:""):"Рыночная цена не найдена"}
+function setMarketPrice(item,quote){if(!item||!quote||!Number.isFinite(Number(quote.price))||Number(quote.price)<=0)return;item.marketPriceUsd=Number(quote.price);item.marketPriceName=quote.marketHashName||item.marketName||item.name;item.marketPriceUpdatedAt=quote.updatedAt||new Date().toISOString();item.value=Math.max(1,Math.round(item.marketPriceUsd*1000));if(Array.isArray(quote.wearPrices))item.marketWearPrices=quote.wearPrices;if(Array.isArray(quote.patternPrices))item.marketPatternPrices=quote.patternPrices}
+function isWearableMarketItem(item){const base=String(item.marketName||item.name||"").trim();return !!base&&item.type!=="sticker"&&item.type!=="patch"&&item.type!=="charm"&&!/^(sticker|autograph|patch|charm)\\s*\\|/i.test(base)}
+function marketBaseName(item){return String(item.marketName||item.name||"").trim().replace(/\\s*\\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$/i,"")}
+function marketVariants(item){const base=String(item.marketName||item.name||"").trim();if(!base)return [];if(!isWearableMarketItem(item))return [base];if(/\\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$/i.test(base))return [base];return MARKET_WEAR_ORDER.map(wear=>base+" ("+wear+")")}
 function marketQuoteFromResult(result){const prices=result?.prices||result||{},steam=Number(prices.steam?.ask),lowest=Number(prices.lowest_ask?.price);if(Number.isFinite(steam)&&steam>0)return {price:steam,marketHashName:result.item||"",updatedAt:result.updated_at};if(Number.isFinite(lowest)&&lowest>0)return {price:lowest,marketHashName:result.item||"",updatedAt:result.updated_at};const other=[prices.skinport?.ask,prices.csfloat?.ask,prices.buff?.ask,prices.youpin?.ask].map(Number).filter(n=>Number.isFinite(n)&&n>0);return other.length?{price:Math.min(...other),marketHashName:result.item||"",updatedAt:result.updated_at}:null}
 async function refreshMarketPricesForContainer(id){
  const container=CASES.find(x=>x.id===id)||CAPSULES.find(x=>x.id===id);if(!container)return false;
@@ -220,17 +234,24 @@ async function refreshMarketPricesForContainer(id){
  const unique=[...new Map(list.filter(x=>x&&x.name).map(x=>[x.name,x])).values()],now=Date.now();
  const pending=unique.filter(item=>{const q=marketPriceCache[item.name];if(q&&q.price>0&&now-(q.cachedAt||0)<12*60*60*1000){setMarketPrice(item,q);return false}return true});
  if(!pending.length){syncMarketPricesToInventory(unique);return true}
- const candidates=new Map();for(const item of pending)for(const name of marketVariants(item))candidates.set(name,name);
- const names=[...candidates.keys()],quotes=new Map();
+ const candidates=new Map();for(const item of pending)for(const name of marketVariants(item))candidates.set(name,{item:name});
+ const quotes=new Map();
  try{
-  for(let i=0;i<names.length;i+=500){
-   const response=await fetch("https://api.openskin.dev/v1/prices/batch",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({items:names.slice(i,i+500)})});
+  const requests=[...candidates.keys()];
+  for(let i=0;i<requests.length;i+=500){
+   const response=await fetch("https://api.openskin.dev/v1/prices/batch",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({items:requests.slice(i,i+500)})});
    if(!response.ok)throw new Error("Market price API HTTP "+response.status);
    const payload=await response.json(),results=Array.isArray(payload.results)?payload.results:Object.entries(payload.data||{}).map(([item,value])=>({item,...value}));
    for(const result of results){const quote=marketQuoteFromResult(result);if(quote)quotes.set(result.item,quote)}
   }
   let found=0;
-  for(const item of pending){const variants=marketVariants(item),available=variants.map(name=>({name,quote:quotes.get(name)})).filter(x=>x.quote);if(!available.length)continue;available.sort((a,b)=>a.quote.price-b.quote.price);const best=available[0],quote={...best.quote,marketHashName:best.name,cachedAt:now};marketPriceCache[item.name]=quote;setMarketPrice(item,quote);found++}
+  for(const item of pending){
+   const variants=marketVariants(item),wearPrices=variants.map(name=>{const quote=quotes.get(name),match=name.match(/\\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$/i);return quote&&match?{wear:match[1],price:quote.price,marketHashName:name,updatedAt:quote.updatedAt}:null}).filter(Boolean);
+   const available=wearPrices.length?wearPrices:variants.map(name=>{const quote=quotes.get(name);return quote?{...quote,marketHashName:name}:null}).filter(Boolean);
+   if(!available.length)continue;available.sort((a,b)=>a.price-b.price);
+   const quote={...available[0],marketHashName:available[0].marketHashName||variants[0],cachedAt:now,wearPrices:wearPrices.length?wearPrices:undefined};
+   marketPriceCache[item.name]=quote;setMarketPrice(item,quote);found++;
+  }
   try{localStorage.setItem("caseLab.market.prices.v1",JSON.stringify(marketPriceCache))}catch(e){}
   syncMarketPricesToInventory(unique);if(found)save();return found>0
  }catch(error){console.info("Live CS2 market prices unavailable; using fallback values",error);return false}
