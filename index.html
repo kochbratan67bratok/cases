@@ -852,6 +852,8 @@ async function openCase(id){
   const windowRect=windowEl.getBoundingClientRect();
   const tileRect=targetTile.getBoundingClientRect();
   const distance=Math.max(0,tileRect.left+tileRect.width/2-(windowRect.left+windowRect.width/2));
+  const previousTile=track.children[45];
+  const tickPitch=previousTile?Math.max(1,targetTile.getBoundingClientRect().left-previousTile.getBoundingClientRect().left):Math.max(1,tileRect.width+8);
   const duration=7200;
   track.style.transition="none";
   let lastTickIndex=-1;
@@ -863,7 +865,7 @@ async function openCase(id){
       if(startedAt===null)startedAt=now;
       const progress=Math.min(1,Math.max(0,(now-startedAt)/duration));
       const eased=1-Math.pow(1-progress,5);
-      const tickIndex=Math.floor((distance*eased)/109);
+      const tickIndex=Math.floor((distance*eased)/tickPitch);
       if(tickIndex!==lastTickIndex&&progress<.995){lastTickIndex=tickIndex;playSound("roll")}
       track.style.transform="translate3d("+(-distance*eased)+"px,0,0)";
       if(progress<1)raf(animate);
