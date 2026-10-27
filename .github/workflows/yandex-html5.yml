@@ -1,0 +1,71 @@
+name: Validate Yandex Games HTML5
+
+on:
+  push:
+    branches: [main, feature/yandex-games-html5]
+    paths:
+      - "index.html"
+      - "README.md"
+      - ".github/workflows/yandex-html5.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - ".github/workflows/yandex-html5.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate HTML and JavaScript syntax
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.current = None
+                  self.inline = []
+                  self.has_viewport = False
+                  self.has_title = False
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if tag == "script":
+                      self.current = [] if "src" not in attrs else None
+                  if tag == "meta" and attrs.get("name") == "viewport":
+                      self.has_viewport = True
+                  if tag == "title":
+                      self.has_title = True
+              def handle_data(self, data):
+                  if self.current is not None:
+                      self.current.append(data)
+              def handle_endtag(self, tag):
+                  if tag == "script" and self.current is not None:
+                      self.inline.append("".join(self.current))
+                      self.current = None
+
+          parser = Scripts()
+          parser.feed(Path("index.html").read_text(encoding="utf-8"))
+          if not parser.has_viewport or not parser.has_title:
+              raise SystemExit("Missing viewport or title")
+          if not parser.inline:
+              raise SystemExit("No inline game script found")
+          Path("/tmp/game.js").write_text(parser.inline[-1], encoding="utf-8")
+          print("HTML entry point looks valid")
+          PY
+          node --check /tmp/game.js
+      - name: Verify platform integration hooks
+        run: |
+          grep -q 'YaGames.init' index.html
+          grep -q 'showRewardedVideo' index.html
+          grep -q 'getData' index.html
+          grep -q 'setData' index.html
+          grep -q 'localStorage' index.html
+          echo "Yandex SDK, rewarded ads and saves found"
