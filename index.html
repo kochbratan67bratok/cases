@@ -1041,7 +1041,7 @@ document.addEventListener("keydown",e=>{
 
 document.addEventListener("click",e=>{const open=e.target.closest("[data-open-case]");if(open){e.preventDefault();e.stopPropagation();openCase(open.dataset.openCase);return}const preview=e.target.closest("[data-preview-container]");if(preview){e.preventDefault();e.stopPropagation();showContainerPreview(preview.dataset.previewContainer);return}const card=e.target.closest("[data-case-card]");if(card){showContainerPreview(card.dataset.caseCard);return}});document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-case-card]")){e.preventDefault();showContainerPreview(e.target.dataset.caseCard)}});
 document.getElementById("contractSlots").addEventListener("click",()=>{if(contractSelection.length)notify("Нажми «Сбросить выбор», чтобы начать заново.")});document.getElementById("closePreview").addEventListener("click",()=>document.getElementById("previewModal").classList.add("hidden"));document.getElementById("previewModal").addEventListener("click",e=>{if(e.target.id==="previewModal")e.currentTarget.classList.add("hidden")});document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("previewModal").classList.add("hidden")});
-document.addEventListener("visibilitychange",()=>{if(document.hidden)stopAllSounds()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){stopAllSounds();setGameplayRunning(false)}else{setGameplayRunning(true)}});
 window.addEventListener("beforeunload",save);
 renderCases();renderAll();initYandex();loadSkinCatalog();loadContainerCatalog();
 </script>
