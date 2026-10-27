@@ -161,7 +161,7 @@ async function openCase(id){
  try{
   box.classList.add("hidden");roulette.classList.remove("hidden");track.style.transition="none";track.style.transform="translateX(0)";
   const strip=Array.from({length:36},()=>weightedDrop(id));strip[29]=skin;track.innerHTML=strip.map(rouletteCard).join("");
-  const card=108,target=Math.max(0,29*card-(roulette.clientWidth/2-card/2));
+  const card=window.matchMedia("(max-width:760px)").matches?92:108,target=Math.max(0,29*card-(roulette.clientWidth/2-card/2));
   track.getBoundingClientRect();track.style.transition="transform 3.6s cubic-bezier(.08,.72,.08,1)";track.style.transform="translateX(-"+target+"px)";playSfx(false);
   await new Promise(resolve=>setTimeout(resolve,3700));playSfx(true);
   state.inventory.unshift(skin);if(rarityRank(skin.rarity)>=rarityRank("rare"))state.rareDrops++;addXP(25);save();renderAll();
