@@ -429,6 +429,28 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 @keyframes graffitiCanShake{0%,100%{translate:0 0}25%{translate:-3px 1px}75%{translate:3px -1px}}
 @media(max-width:520px){.case-unlock-scene{height:180px;perspective:700px}.case-unlock-model{width:168px;height:96px}.case-crate-base{height:74px}.case-unlock-heading{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.case-unlock-stage.is-shaking .case-crate-base,.case-unlock-stage.is-shaking .case-unlock-aura,.case-unlock-stage.is-bursting .case-unlock-aura,.case-unlock-stage.is-bursting .case-crate-base,.case-unlock-stage.kind-capsule.is-bursting .case-unlock-model,.case-unlock-stage.kind-graffiti.is-bursting .case-crate-base{animation:none!important}}
+
+/* Cinematic opening sequence: impact, perspective, glow and a sharper roulette stop. */
+#caseOpeningOverlay #openingPanel{background:radial-gradient(ellipse at 50% 24%,#24394b 0%,#111923 48%,#0a0e14 100%);border-color:#536c80;box-shadow:0 28px 100px #000d,0 0 0 1px #9eb9d322,0 0 70px #5c8cb622}
+#caseOpeningOverlay .roulette-head{color:#d2dfec;text-shadow:0 0 14px #8bc8ff2b}
+#caseOpeningOverlay .case-unlock-scene{height:220px;perspective:850px}
+#caseOpeningOverlay .case-unlock-aura{width:min(430px,110%);height:190px;background:radial-gradient(ellipse,#b3dfff38 0%,#8bbfff18 36%,transparent 72%);filter:blur(1px)}
+#caseOpeningOverlay .case-unlock-model{transform:translateX(-50%) rotateX(11deg) rotateY(-13deg);transform-style:preserve-3d;filter:drop-shadow(0 22px 22px #000b)}
+#caseOpeningOverlay .case-crate-base{background-image:linear-gradient(90deg,#0005 0 5%,transparent 5% 95%,#0005 95%),linear-gradient(145deg,var(--case-theme),#1b2633 72%,#090d12);box-shadow:inset 0 1px #ffffff70,inset 0 -9px 0 #0005,0 0 0 1px #ffffff18}
+#caseOpeningOverlay .case-crate-lid{transform-origin:50% 100%;backface-visibility:visible;box-shadow:inset 0 1px #ffffff70,0 -7px 16px #0005}
+#caseOpeningOverlay .case-unlock-stage.is-shaking .case-unlock-model{animation:cinematicCaseShake .105s linear infinite}
+#caseOpeningOverlay .case-unlock-stage.is-bursting .case-unlock-aura{animation:cinematicCaseFlash .72s ease-out both}
+#caseOpeningOverlay .case-unlock-stage.is-bursting .case-unlock-model{filter:drop-shadow(0 0 32px #b8dcff88) drop-shadow(0 24px 20px #000b)}
+#caseOpeningOverlay .roulette-window{height:132px;background:linear-gradient(90deg,#080d13,#243647 48%,#080d13);border:1px solid #5b7488;box-shadow:inset 0 0 28px #000b,0 0 24px #75bfff18}
+#caseOpeningOverlay .roulette-window:before{width:4px;background:#f3c969;box-shadow:0 0 8px #ffe3a0,0 0 24px #f2ae3a;animation:rouletteMarkerPulse .8s ease-in-out infinite alternate}
+#caseOpeningOverlay .roulette-tile{background:linear-gradient(160deg,#253545,#101720);border-top-color:#ffffff18;box-shadow:inset 0 1px #ffffff0b}
+#caseOpeningOverlay .roulette-tile.winner{transform:scale(1.035);border-color:#ffdb7b;box-shadow:0 0 0 1px #ffe4a1,0 0 28px #ffbd4c77,inset 0 0 20px #ffcb4b20}
+#caseOpeningOverlay .case-unlock-status{color:#dceeff;text-shadow:0 0 16px #8ac8ff55}
+@keyframes cinematicCaseShake{0%,100%{translate:0 0;rotate:0deg}25%{translate:-3px 1px;rotate:-1.2deg}75%{translate:3px -1px;rotate:1.2deg}}
+@keyframes cinematicCaseFlash{0%{opacity:.2;scale:.55;filter:brightness(1)}35%{opacity:1;scale:1.22;filter:brightness(2.1)}100%{opacity:.75;scale:1;filter:brightness(1.2)}}
+@keyframes rouletteMarkerPulse{from{opacity:.75;filter:brightness(1)}to{opacity:1;filter:brightness(1.65)}}
+@media(max-width:520px){#caseOpeningOverlay .case-unlock-scene{height:190px}#caseOpeningOverlay .roulette-window{height:112px}#caseOpeningOverlay .roulette-tile{width:90px}}
+@media(prefers-reduced-motion:reduce){#caseOpeningOverlay .case-unlock-stage.is-shaking .case-unlock-model,#caseOpeningOverlay .roulette-window:before{animation:none!important}}
 </style>
 </head>
 <body>
@@ -686,7 +708,7 @@ function renderCases(){
  moreCapsules.classList.toggle("hidden",capsuleVisibleCount>=CAPSULES.length);moreCapsules.textContent="Показать ещё капсулы ("+Math.min(24,CAPSULES.length-capsuleVisibleCount)+")";
 }
 let sharedAudioContext=null;let soundMaster=null;let activeSoundNodes=new Set();
-function getAudio(){const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return null;if(!sharedAudioContext||sharedAudioContext.state==="closed"){sharedAudioContext=new Audio();soundMaster=sharedAudioContext.createGain();soundMaster.gain.value=.24;soundMaster.connect(sharedAudioContext.destination)}if(sharedAudioContext.state==="suspended")sharedAudioContext.resume().catch(()=>{});return sharedAudioContext}
+function getAudio(){const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return null;if(!sharedAudioContext||sharedAudio.state==="closed"){sharedAudioContext=new Audio();soundMaster=sharedAudioContext.createGain();soundMaster.gain.value=.62;const limiter=sharedAudioContext.createDynamicsCompressor();limiter.threshold.value=-12;limiter.knee.value=18;limiter.ratio.value=8;limiter.attack.value=.004;limiter.release.value=.16;soundMaster.connect(limiter);limiter.connect(sharedAudioContext.destination)}if(sharedAudioContext.state==="suspended")sharedAudioContext.resume().catch(()=>{});return sharedAudioContext}
 function stopAllSounds(){for(const node of activeSoundNodes){try{node.stop?.()}catch(e){}try{node.disconnect?.()}catch(e){}}activeSoundNodes.clear();if(sharedAudioContext&&sharedAudioContext.state!=="closed"){try{sharedAudioContext.suspend()}catch(e){}}}
 function celebrateCaseLab(kind="rare"){
  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
@@ -710,7 +732,7 @@ function triggerDropReveal(prize,panel){
  
 }
 function pulseDailyReward(button){if(!button)return;button.classList.remove("reward-pop");void button.offsetWidth;button.classList.add("reward-pop");setTimeout(()=>button.classList.remove("reward-pop"),650);celebrateCaseLab("rare")}
-function playSound(kind="tick"){try{const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime;const tone=(freq,end,delay,duration,peak,type="sine",cutoff=2400)=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(Math.max(1,freq),t+delay);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+delay+duration);filter.type="lowpass";filter.frequency.setValueAtTime(cutoff,t+delay);filter.Q.value=.55;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(peak,t+delay+.006);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);o.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(o);o.onended=()=>{activeSoundNodes.delete(o);try{o.disconnect();filter.disconnect();g.disconnect()}catch(e){}};o.start(t+delay);o.stop(t+delay+duration+.025)};if(kind==="tick"){const f=1450+Math.random()*250;tone(f,f*.48,0,.038,.012,"triangle",2600);tone(190,95,0,.045,.018,"sine",500)}else if(kind==="roll"){tone(920+Math.random()*180,610,0,.026,.0045,"sine",1800)}else if(kind==="unlock"){tone(360,220,0,.11,.026,"triangle",1200);tone(980,620,.025,.085,.012,"sine",2200);tone(1380,760,.055,.05,.006,"sine",2800)}else if(kind==="open"||kind==="container-open"){tone(155,58,0,.24,.042,"sine",520);tone(390,115,.012,.19,.018,"triangle",1050);tone(720,260,.035,.09,.006,"sine",1900)}else if(kind==="capsule-open"){tone(1680,820,0,.055,.014,"triangle",3400);tone(940,1480,.035,.12,.019,"sine",3200);tone(620,1120,.11,.16,.014,"triangle",2600)}else if(kind==="graffiti-open"){tone(520,210,0,.075,.012,"sawtooth",1200);tone(880,1320,.035,.085,.009,"triangle",2500);tone(1320,520,.095,.12,.007,"sine",2800)}else if(kind==="jackpot"){tone(110,72,0,.32,.045,"sine",420);tone(520,980,.025,.24,.026,"triangle",2400);tone(780,1480,.10,.30,.022,"sine",3200);tone(1240,1860,.22,.28,.014,"triangle",3800)}else if(kind==="win"){tone(520,880,0,.17,.026,"sine",2200);tone(780,1260,.055,.19,.016,"triangle",2800);tone(1080,1540,.12,.16,.009,"sine",3200)}else if(kind==="rare"){tone(350,175,0,.14,.019,"triangle",900);tone(620,290,.045,.15,.012,"sine",1700)}else{tone(420,240,0,.09,.012,"sine",1400)}}catch(e){console.info("Audio unavailable",e)}}
+function playSound(kind="tick"){try{const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime;const tone=(freq,end,delay,duration,peak,type="sine",cutoff=2400)=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(Math.max(1,freq),t+delay);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+delay+duration);filter.type="lowpass";filter.frequency.setValueAtTime(cutoff,t+delay);filter.Q.value=.55;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(Math.min(.16,peak*1.8),t+delay+.006);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);o.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(o);o.onended=()=>{activeSoundNodes.delete(o);try{o.disconnect();filter.disconnect();g.disconnect()}catch(e){}};o.start(t+delay);o.stop(t+delay+duration+.025)};const noise=(duration,peak,delay=0,cutoff=1800)=>{const n=Math.max(1,Math.floor(ctx.sampleRate*duration)),buffer=ctx.createBuffer(1,n,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<n;i++)data[i]=(Math.random()*2-1)*(1-i/n);const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),g=ctx.createGain();src.buffer=buffer;filter.type="lowpass";filter.frequency.value=cutoff;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(Math.min(.12,peak*1.8),t+delay+.012);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);src.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(src);src.onended=()=>{activeSoundNodes.delete(src);try{src.disconnect();filter.disconnect();g.disconnect()}catch(e){}};src.start(t+delay);src.stop(t+delay+duration+.03)};if(kind==="tick"){const f=1450+Math.random()*250;tone(f,f*.48,0,.038,.022,"triangle",2600);tone(190,95,0,.045,.026,"sine",500)}else if(kind==="roll"){tone(920+Math.random()*180,610,0,.03,.012,"sine",1800)}else if(kind==="rumble"){tone(74,42,0,.52,.095,"sine",180);tone(118,62,.04,.42,.055,"triangle",280);noise(.42,.045,0,360)}else if(kind==="lid"){tone(180,54,0,.42,.105,"sine",280);tone(740,180,.02,.28,.065,"sawtooth",1500);tone(1250,380,.07,.19,.038,"triangle",2600);noise(.34,.075,0,1400)}else if(kind==="spin"){tone(120,580,0,.48,.055,"sawtooth",1200);tone(260,920,.08,.4,.025,"triangle",2000);noise(.52,.038,0,2200)}else if(kind==="stop"){tone(95,48,0,.22,.12,"sine",220);tone(980,310,.008,.12,.055,"triangle",2100);noise(.14,.06,0,1200)}else if(kind==="unlock"){tone(360,220,0,.11,.05,"triangle",1200);tone(980,620,.025,.085,.028,"sine",2200);tone(1380,760,.055,.05,.016,"sine",2800);noise(.13,.025,.015,3000)}else if(kind==="open"||kind==="container-open"){tone(155,48,0,.34,.105,"sine",520);tone(390,115,.012,.25,.05,"triangle",1050);tone(720,260,.035,.16,.024,"sine",1900);noise(.32,.09,0,1250)}else if(kind==="capsule-open"){tone(1680,820,0,.075,.035,"triangle",3400);tone(940,1480,.035,.16,.048,"sine",3200);tone(620,1120,.11,.22,.036,"triangle",2600);noise(.22,.035,0,3600)}else if(kind==="graffiti-open"){tone(520,210,0,.11,.035,"sawtooth",1200);tone(880,1320,.035,.13,.026,"triangle",2500);tone(1320,520,.095,.18,.02,"sine",2800);noise(.19,.045,0,2100)}else if(kind==="jackpot"){tone(110,72,0,.32,.045,"sine",420);tone(520,980,.025,.24,.026,"triangle",2400);tone(780,1480,.10,.30,.022,"sine",3200);tone(1240,1860,.22,.28,.014,"triangle",3800)}else if(kind==="win"){tone(520,880,0,.17,.026,"sine",2200);tone(780,1260,.055,.19,.016,"triangle",2800);tone(1080,1540,.12,.16,.009,"sine",3200)}else if(kind==="rare"){tone(350,175,0,.14,.019,"triangle",900);tone(620,290,.045,.15,.012,"sine",1700)}else{tone(420,240,0,.09,.012,"sine",1400)}}catch(e){console.info("Audio unavailable",e)}}
 function rouletteTile(s){return '<div class="roulette-tile" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#b0c3d9")+'">'+skinImage(s)+'<span>'+escapeHtml(s.name)+'</span><small>'+(s.marketPriceUsd>0?"$"+Number(s.marketPriceUsd).toFixed(2):money(s.value)+" CR")+'</small></div>'}
 function resetCaseUnlockStage(c){
  const stage=document.getElementById("caseUnlockStage"),model=document.getElementById("caseUnlockModel"),lid=document.getElementById("caseUnlockLid"),key=document.getElementById("caseUnlockKey");
@@ -747,17 +769,19 @@ async function animateCaseUnlock(c){
  const kindClass=["capsule","graffiti","patch","charm","collection"].includes(c.kind)?c.kind:"case";
  stage.classList.add("kind-"+kindClass);
  const kindLabel=c.kind==="graffiti"?"ГРАФФИТИ":c.kind==="capsule"?"КАПСУЛУ":c.kind==="patch"?"НАБОР НАШИВОК":c.kind==="charm"?"КОНТЕЙНЕР С БРЕЛОКАМИ":c.kind==="collection"?"КОНТЕЙНЕР":"КЕЙС";
- status.textContent="ОТКРЫВАЕМ "+kindLabel;
+ status.textContent="ПОДГОТАВЛИВАЕМ ЗАМОК · "+kindLabel;playSound("rumble");stage.classList.add("is-shaking");
+ await tween(kindClass==="capsule"?300:520,p=>{const pulse=1+Math.sin(p*Math.PI*8)*.018;model.style.setProperty("scale",String(pulse));});
+ model.style.removeProperty("scale");
+ status.textContent="ВСТАВЛЯЕМ КЛЮЧ";
  await tween(540,p=>{const e=easeOut(p);key.style.setProperty("--key-x",(50*(1-e))+"px");key.style.setProperty("--key-y",(-18*(1-e))+"px");key.style.setProperty("--key-angle",(24*(1-e))+"deg")});
- status.textContent="ПОВОРАЧИВАЕМ КЛЮЧ";playSound("unlock");stage.classList.add("is-shaking");
+ status.textContent="ПОВОРАЧИВАЕМ КЛЮЧ";playSound("unlock");
  await tween(620,p=>{key.style.setProperty("--key-angle",(82*easeOut(p))+"deg")});
- stage.classList.remove("is-shaking");
- status.textContent=kindClass==="capsule"?"КАПСУЛА ВСКРЫТА":kindClass==="graffiti"?"ГРАФФИТИ ОТКРЫТО":"КОНТЕЙНЕР ОТКРЫТ";playSound(kindClass==="capsule"?"capsule-open":kindClass==="graffiti"?"graffiti-open":"container-open");
- stage.classList.add("is-bursting");
- await tween(kindClass==="capsule"?520:760,p=>{const e=easeOut(p);lid.style.setProperty("--lid-angle",(-108*e)+"deg");key.style.setProperty("--key-angle",(82+14*e)+"deg");key.style.setProperty("--key-x",(-6*e)+"px")});
+ stage.classList.remove("is-shaking");status.textContent="ЗАСОВ СНЯТ · ОТКРЫВАЕМ";playSound("lid");stage.classList.add("is-bursting");
+ let lidSoundPlayed=false;
+ await tween(kindClass==="capsule"?520:760,p=>{const e=easeOut(p);lid.style.setProperty("--lid-angle",(-108*e)+"deg");key.style.setProperty("--key-angle",(82+14*e)+"deg");key.style.setProperty("--key-x",(-6*e)+"px");if(!lidSoundPlayed&&p>.38){lidSoundPlayed=true;playSound(kindClass==="capsule"?"capsule-open":kindClass==="graffiti"?"graffiti-open":"container-open")}});
  stage.classList.remove("is-bursting");stage.classList.add("is-unlocked");key.style.opacity=".25";
- status.textContent="КЕЙС ОТКРЫТ · ПРОВЕРЯЕМ ДРОП";
- await new Promise(resolve=>setTimeout(resolve,180));
+ status.textContent="КОНТЕЙНЕР ОТКРЫТ · ГОТОВИМ РУЛЕТКУ";
+ await new Promise(resolve=>setTimeout(resolve,320));
 }
 
 let openingOverlay=null,openingPlaceholder=null;
@@ -828,10 +852,10 @@ async function openCase(id){
   const windowRect=windowEl.getBoundingClientRect();
   const tileRect=targetTile.getBoundingClientRect();
   const distance=Math.max(0,tileRect.left+tileRect.width/2-(windowRect.left+windowRect.width/2));
-  const duration=6200;
+  const duration=7200;
   track.style.transition="none";
   let lastTickIndex=-1;
-  playSound("roll");
+  playSound("spin");
   await new Promise(resolve=>{
     let startedAt=null;
     const animate=timestamp=>{
@@ -843,7 +867,7 @@ async function openCase(id){
       if(tickIndex!==lastTickIndex&&progress<.995){lastTickIndex=tickIndex;playSound("roll")}
       track.style.transform="translate3d("+(-distance*eased)+"px,0,0)";
       if(progress<1)raf(animate);
-      else{track.style.transform="translate3d("+(-distance)+"px,0,0)";resolve()}
+      else{track.style.transform="translate3d("+(-distance)+"px,0,0)";playSound("stop");resolve()}
     };
     raf(animate);
   });
