@@ -707,7 +707,7 @@ function triggerDropReveal(prize,panel){
  for(let i=0;i<(gold?30:rank>=4?24:14);i++){const spark=document.createElement("i");spark.className="drop-reveal-spark";spark.style.setProperty("--angle",(i*360/(gold?30:rank>=4?24:14)+Math.random()*8)+"deg");spark.style.setProperty("--reach",(55+Math.random()*120)+"px");spark.style.setProperty("--spark-delay",(Math.random()*.14)+"s");fx.appendChild(spark)}
  panel.appendChild(fx);
  setTimeout(()=>{panel.classList.remove("drop-reveal");fx.remove()},gold?1900:rank>=4?1600:1050);
- if(gold){playSound("jackpot");celebrateCaseLab("gold")}else if(rank>=4){playSound("win");celebrateCaseLab("rare")}
+ 
 }
 function pulseDailyReward(button){if(!button)return;button.classList.remove("reward-pop");void button.offsetWidth;button.classList.add("reward-pop");setTimeout(()=>button.classList.remove("reward-pop"),650);celebrateCaseLab("rare")}
 function playSound(kind="tick"){try{const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime;const tone=(freq,end,delay,duration,peak,type="sine",cutoff=2400)=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(Math.max(1,freq),t+delay);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+delay+duration);filter.type="lowpass";filter.frequency.setValueAtTime(cutoff,t+delay);filter.Q.value=.55;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(peak,t+delay+.006);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);o.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(o);o.onended=()=>{activeSoundNodes.delete(o);try{o.disconnect();filter.disconnect();g.disconnect()}catch(e){}};o.start(t+delay);o.stop(t+delay+duration+.025)};if(kind==="tick"){const f=1450+Math.random()*250;tone(f,f*.48,0,.038,.012,"triangle",2600);tone(190,95,0,.045,.018,"sine",500)}else if(kind==="roll"){tone(920+Math.random()*180,610,0,.026,.0045,"sine",1800)}else if(kind==="unlock"){tone(360,220,0,.11,.026,"triangle",1200);tone(980,620,.025,.085,.012,"sine",2200);tone(1380,760,.055,.05,.006,"sine",2800)}else if(kind==="open"||kind==="container-open"){tone(155,58,0,.24,.042,"sine",520);tone(390,115,.012,.19,.018,"triangle",1050);tone(720,260,.035,.09,.006,"sine",1900)}else if(kind==="capsule-open"){tone(1680,820,0,.055,.014,"triangle",3400);tone(940,1480,.035,.12,.019,"sine",3200);tone(620,1120,.11,.16,.014,"triangle",2600)}else if(kind==="graffiti-open"){tone(520,210,0,.075,.012,"sawtooth",1200);tone(880,1320,.035,.085,.009,"triangle",2500);tone(1320,520,.095,.12,.007,"sine",2800)}else if(kind==="jackpot"){tone(110,72,0,.32,.045,"sine",420);tone(520,980,.025,.24,.026,"triangle",2400);tone(780,1480,.10,.30,.022,"sine",3200);tone(1240,1860,.22,.28,.014,"triangle",3800)}else if(kind==="win"){tone(520,880,0,.17,.026,"sine",2200);tone(780,1260,.055,.19,.016,"triangle",2800);tone(1080,1540,.12,.16,.009,"sine",3200)}else if(kind==="rare"){tone(350,175,0,.14,.019,"triangle",900);tone(620,290,.045,.15,.012,"sine",1700)}else{tone(420,240,0,.09,.012,"sine",1400)}}catch(e){console.info("Audio unavailable",e)}}
@@ -856,7 +856,7 @@ async function openCase(id){
   panel.classList.toggle("gold-drop",itemType(prize)==="knife"||itemType(prize)==="gloves");
   panel.classList.toggle("rare-drop",!(itemType(prize)==="knife"||itemType(prize)==="gloves")&&rarityRank(prize.rarity)>=4);
   result.innerHTML='<div class="result-art">'+skinImage(prize)+'</div><div style="min-width:0;flex:1"><div class="eyebrow">ПРЕДМЕТ ПОЛУЧЕН</div><div class="result-title">'+escapeHtml(prize.name)+'</div><div class="rarity-label" style="--rarity-color:'+(RARITY[prize.rarity]?.color||"#fff")+'">'+escapeHtml(RARITY[prize.rarity]?.label||prize.rarity)+'</div><div class="result-value">◈ '+money(prize.value)+' CR</div><small class="market-price-muted">'+(prize.marketPriceUsd>0?marketPriceLabel(prize):"Рыночная цена не найдена")+'</small></div><button data-result-inventory>В инвентарь</button>';
-  result.classList.remove("hidden");if(rarityRank(prize.rarity)>=4||itemType(prize)==="knife"||itemType(prize)==="gloves")celebrateCaseLab(itemType(prize)==="knife"||itemType(prize)==="gloves"?"gold":"rare");result.querySelector("[data-result-inventory]").addEventListener("click",()=>go("inventory"));
+  result.classList.remove("hidden");result.querySelector("[data-result-inventory]").addEventListener("click",()=>go("inventory"));
   document.getElementById("rouletteStatus").textContent="Готово · +18 XP";
   finished=true;
   result.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
@@ -864,10 +864,11 @@ async function openCase(id){
   console.error("Case opening error:",error?.message||error,error?.stack||"");
   if(charged&&prize&&!state.inventory.some(x=>x.uid===prize.uid)){state.inventory.unshift(prize);addXP(18)}
   save();renderAll();
+  closeOpeningOverlay(true);
   notify(charged?"Предмет сохранён в инвентарь. Анимация прервалась — попробуй ещё раз.":"Не удалось начать открытие. Кредиты не списаны.");
  }finally{
   if(tickTimer)clearInterval(tickTimer);
-  if(isWeaponCase&&!finished&&unlockStage){unlockStage.classList.add("hidden");unlockStage.classList.remove("is-unlocked");windowEl.classList.remove("hidden")}
+  if(hasContainerAnimation&&!finished&&unlockStage){unlockStage.classList.add("hidden");unlockStage.classList.remove("is-unlocked","is-shaking","is-bursting");windowEl.classList.remove("hidden")}
   panel.classList.remove("is-opening");opening=false;renderAll();
  }
 }
