@@ -809,7 +809,7 @@ async function openCase(id){
  opening=true;playSound("tick");
  const panel=document.getElementById("openingPanel"),track=document.getElementById("rouletteTrack"),windowEl=document.querySelector("#openingPanel .roulette-window"),result=document.getElementById("openResult"),unlockStage=document.getElementById("caseUnlockStage");
  if(!panel||!track||!windowEl||!result||(hasContainerAnimation&&!unlockStage)){opening=false;console.error("Case opening panel is missing");notify("Не удалось открыть рулетку: элементы интерфейса не найдены.");return}
- let tickTimer=null,charged=false,prize=null,finished=false;
+ let charged=false,prize=null,finished=false;
  try{
   document.getElementById("rouletteCaseName").textContent=c.name.toUpperCase()+" / OPENING";
   document.getElementById("rouletteStatus").textContent="Подготавливаем открытие…";
@@ -874,7 +874,6 @@ async function openCase(id){
     raf(animate);
   });
   targetTile.classList.add("winner");
-  if(tickTimer){clearInterval(tickTimer);tickTimer=null}
   playSound(rarityRank(prize.rarity)>=4?"win":"rare");triggerDropReveal(prize,panel);panel.classList.remove("is-opening");
   if(!state.inventory.some(x=>x.uid===prize.uid))state.inventory.unshift(prize);
   if(rarityRank(prize.rarity)>=2||itemType(prize)==="knife"||itemType(prize)==="gloves")state.rareDrops++;
@@ -893,7 +892,6 @@ async function openCase(id){
   closeOpeningOverlay(true);
   notify(charged?"Предмет сохранён в инвентарь. Анимация прервалась — попробуй ещё раз.":"Не удалось начать открытие. Кредиты не списаны.");
  }finally{
-  if(tickTimer)clearInterval(tickTimer);
   if(hasContainerAnimation&&!finished&&unlockStage){unlockStage.classList.add("hidden");unlockStage.classList.remove("is-unlocked","is-shaking","is-bursting");windowEl.classList.remove("hidden")}
   panel.classList.remove("is-opening");opening=false;renderAll();
  }
