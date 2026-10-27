@@ -375,6 +375,16 @@ input:focus,select:focus{outline:1px solid #b8ff3b80;border-color:#b8ff3b80!impo
 #openingPanel.container-capsule .case-crate-emblem{font-size:40px}
 #openingPanel.container-graffiti .case-unlock-status{letter-spacing:.14em;color:#f5a5cf}
 #openingPanel.container-capsule .case-unlock-status{color:#e8cb86}
+
+/* Distinct container motion and audio identity. Original Web Audio cues are synthesized for this site. */
+#caseUnlockStage.kind-capsule .case-unlock-model{filter:drop-shadow(0 0 18px rgba(210,173,98,.35));}
+#caseUnlockStage.kind-capsule .case-unlock-glyph{animation:capsuleGlimmer 1.25s ease-in-out infinite alternate;}
+#caseUnlockStage.kind-graffiti .case-unlock-model{filter:drop-shadow(0 0 18px rgba(244,114,182,.3));}
+#caseUnlockStage.kind-graffiti .case-crate-base{transform:rotate(-1.5deg);}
+#caseUnlockStage.kind-graffiti.is-unlocked .case-unlock-aura{animation:graffitiBurst .5s ease-out both;}
+#caseUnlockStage.kind-patch .case-unlock-model,#caseUnlockStage.kind-charm .case-unlock-model{filter:drop-shadow(0 0 16px rgba(130,150,255,.22));}
+@keyframes capsuleGlimmer{from{opacity:.7;filter:brightness(.9)}to{opacity:1;filter:brightness(1.6)}}
+@keyframes graffitiBurst{0%{opacity:.3;transform:scale(.75)}65%{opacity:1;transform:scale(1.16)}100%{opacity:.9;transform:scale(1)}}
 </style>
 </head>
 <body>
@@ -642,7 +652,7 @@ function celebrateCaseLab(kind="rare"){
  document.body.appendChild(layer);setTimeout(()=>layer.remove(),1900);
 }
 function pulseDailyReward(button){if(!button)return;button.classList.remove("reward-pop");void button.offsetWidth;button.classList.add("reward-pop");setTimeout(()=>button.classList.remove("reward-pop"),650);celebrateCaseLab("rare")}
-function playSound(kind="tick"){try{const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime;const tone=(freq,end,delay,duration,peak,type="sine",cutoff=2400)=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(Math.max(1,freq),t+delay);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+delay+duration);filter.type="lowpass";filter.frequency.setValueAtTime(cutoff,t+delay);filter.Q.value=.55;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(peak,t+delay+.006);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);o.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(o);o.onended=()=>{activeSoundNodes.delete(o);try{o.disconnect();filter.disconnect();g.disconnect()}catch(e){}};o.start(t+delay);o.stop(t+delay+duration+.025)};if(kind==="tick"){const f=1450+Math.random()*250;tone(f,f*.48,0,.038,.012,"triangle",2600);tone(190,95,0,.045,.018,"sine",500)}else if(kind==="roll"){tone(920+Math.random()*180,610,0,.026,.0045,"sine",1800)}else if(kind==="unlock"){tone(360,220,0,.11,.026,"triangle",1200);tone(980,620,.025,.085,.012,"sine",2200);tone(1380,760,.055,.05,.006,"sine",2800)}else if(kind==="open"){tone(155,58,0,.24,.042,"sine",520);tone(390,115,.012,.19,.018,"triangle",1050);tone(720,260,.035,.09,.006,"sine",1900)}else if(kind==="win"){tone(520,880,0,.17,.026,"sine",2200);tone(780,1260,.055,.19,.016,"triangle",2800);tone(1080,1540,.12,.16,.009,"sine",3200)}else if(kind==="rare"){tone(350,175,0,.14,.019,"triangle",900);tone(620,290,.045,.15,.012,"sine",1700)}else{tone(420,240,0,.09,.012,"sine",1400)}}catch(e){console.info("Audio unavailable",e)}}
+function playSound(kind="tick"){try{const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime;const tone=(freq,end,delay,duration,peak,type="sine",cutoff=2400)=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(Math.max(1,freq),t+delay);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+delay+duration);filter.type="lowpass";filter.frequency.setValueAtTime(cutoff,t+delay);filter.Q.value=.55;g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(peak,t+delay+.006);g.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);o.connect(filter);filter.connect(g);g.connect(soundMaster);activeSoundNodes.add(o);o.onended=()=>{activeSoundNodes.delete(o);try{o.disconnect();filter.disconnect();g.disconnect()}catch(e){}};o.start(t+delay);o.stop(t+delay+duration+.025)};if(kind==="tick"){const f=1450+Math.random()*250;tone(f,f*.48,0,.038,.012,"triangle",2600);tone(190,95,0,.045,.018,"sine",500)}else if(kind==="roll"){tone(920+Math.random()*180,610,0,.026,.0045,"sine",1800)}else if(kind==="unlock"){tone(360,220,0,.11,.026,"triangle",1200);tone(980,620,.025,.085,.012,"sine",2200);tone(1380,760,.055,.05,.006,"sine",2800)}else if(kind==="open"||kind==="container-open"){tone(155,58,0,.24,.042,"sine",520);tone(390,115,.012,.19,.018,"triangle",1050);tone(720,260,.035,.09,.006,"sine",1900)}else if(kind==="capsule-open"){tone(1680,820,0,.055,.014,"triangle",3400);tone(940,1480,.035,.12,.019,"sine",3200);tone(620,1120,.11,.16,.014,"triangle",2600)}else if(kind==="graffiti-open"){tone(520,210,0,.075,.012,"sawtooth",1200);tone(880,1320,.035,.085,.009,"triangle",2500);tone(1320,520,.095,.12,.007,"sine",2800)}else if(kind==="win"){tone(520,880,0,.17,.026,"sine",2200);tone(780,1260,.055,.19,.016,"triangle",2800);tone(1080,1540,.12,.16,.009,"sine",3200)}else if(kind==="rare"){tone(350,175,0,.14,.019,"triangle",900);tone(620,290,.045,.15,.012,"sine",1700)}else{tone(420,240,0,.09,.012,"sine",1400)}}catch(e){console.info("Audio unavailable",e)}}
 function rouletteTile(s){return '<div class="roulette-tile" style="--rarity-color:'+(RARITY[s.rarity]?.color||"#b0c3d9")+'">'+skinImage(s)+'<span>'+escapeHtml(s.name)+'</span><small>'+(s.marketPriceUsd>0?"$"+Number(s.marketPriceUsd).toFixed(2):money(s.value)+" CR")+'</small></div>'}
 function resetCaseUnlockStage(c){
  const stage=document.getElementById("caseUnlockStage"),model=document.getElementById("caseUnlockModel"),lid=document.getElementById("caseUnlockLid"),key=document.getElementById("caseUnlockKey");
@@ -674,13 +684,15 @@ async function animateCaseUnlock(c){
  });
  const easeOut=p=>1-Math.pow(1-p,3);
  const status=document.getElementById("caseUnlockStatus");
- stage.classList.remove("hidden","is-unlocked");
+ stage.classList.remove("hidden","is-unlocked","kind-case","kind-capsule","kind-graffiti","kind-patch","kind-charm","kind-collection");
+ const kindClass=["capsule","graffiti","patch","charm","collection"].includes(c.kind)?c.kind:"case";
+ stage.classList.add("kind-"+kindClass);
  const kindLabel=c.kind==="graffiti"?"ГРАФФИТИ":c.kind==="capsule"?"КАПСУЛУ":c.kind==="patch"?"НАБОР НАШИВОК":c.kind==="charm"?"КОНТЕЙНЕР С БРЕЛОКАМИ":c.kind==="collection"?"КОНТЕЙНЕР":"КЕЙС";
  status.textContent="ОТКРЫВАЕМ "+kindLabel;
  await tween(540,p=>{const e=easeOut(p);key.style.setProperty("--key-x",(50*(1-e))+"px");key.style.setProperty("--key-y",(-18*(1-e))+"px");key.style.setProperty("--key-angle",(24*(1-e))+"deg")});
  status.textContent="ПОВОРАЧИВАЕМ КЛЮЧ";playSound("unlock");
  await tween(620,p=>{key.style.setProperty("--key-angle",(82*easeOut(p))+"deg")});
- status.textContent="ЗАМОК ОТКРЫТ";playSound("open");
+ status.textContent=kindClass==="capsule"?"КАПСУЛА ВСКРЫТА":kindClass==="graffiti"?"ГРАФФИТИ ОТКРЫТО":"КОНТЕЙНЕР ОТКРЫТ";playSound(kindClass==="capsule"?"capsule-open":kindClass==="graffiti"?"graffiti-open":"container-open");
  await tween(760,p=>{const e=easeOut(p);lid.style.setProperty("--lid-angle",(-108*e)+"deg");key.style.setProperty("--key-angle",(82+14*e)+"deg");key.style.setProperty("--key-x",(-6*e)+"px")});
  stage.classList.add("is-unlocked");key.style.opacity=".25";
  status.textContent="КЕЙС ОТКРЫТ · ПРОВЕРЯЕМ ДРОП";
@@ -757,7 +769,8 @@ async function openCase(id){
   const distance=Math.max(0,tileRect.left+tileRect.width/2-(windowRect.left+windowRect.width/2));
   const duration=6200;
   track.style.transition="none";
-  playSound("roll");tickTimer=setInterval(()=>playSound("roll"),220);
+  let lastTickIndex=-1;
+  playSound("roll");
   await new Promise(resolve=>{
     let startedAt=null;
     const animate=timestamp=>{
@@ -765,6 +778,8 @@ async function openCase(id){
       if(startedAt===null)startedAt=now;
       const progress=Math.min(1,Math.max(0,(now-startedAt)/duration));
       const eased=1-Math.pow(1-progress,5);
+      const tickIndex=Math.floor((distance*eased)/109);
+      if(tickIndex!==lastTickIndex&&progress<.995){lastTickIndex=tickIndex;playSound("roll")}
       track.style.transform="translate3d("+(-distance*eased)+"px,0,0)";
       if(progress<1)raf(animate);
       else{track.style.transform="translate3d("+(-distance)+"px,0,0)";resolve()}
