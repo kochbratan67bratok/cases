@@ -20,6 +20,7 @@ check(/function initYandex\s*\(/.test(html), "Yandex Games SDK initialization ex
 check(/game_api_pause/.test(html) && /game_api_resume/.test(html), "Yandex Games pause/resume events are handled");
 check(/function stopAllSounds\s*\(/.test(html), "audio can be stopped when the game loses focus");
 check(/function save\s*\(/.test(html) && /function loadState\s*\(/.test(html), "save/load functions exist");
+check(/function normalizeState\s*\(/.test(html), "local and cloud saves are normalized before use");
 check(/localStorage/.test(html), "local persistence is implemented");
 check(/state\.coins===freshState\(\)\.coins/.test(html), "cloud save restore matches the actual fresh-state balance");
 check(/prefers-reduced-motion/.test(html), "reduced-motion preference is respected");
