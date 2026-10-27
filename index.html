@@ -340,8 +340,8 @@ async function loadSkinCatalog(){
    for(const c of CASES){const wanted=crateNames[c.id];const owner=data.find(s=>s.crates&&s.crates.some(cr=>cr.name===wanted&&cr.image));const crate=owner?.crates?.find(cr=>cr.name===wanted&&cr.image);if(crate)crateImages[c.id]=crate.image}
    try{localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),items:normalized.slice(0,1800),crates:crateImages}))}catch(e){console.info("Skin catalog cache skipped",e)}
   }
-  if(normalized.length>50){SKINS=normalized;catalogStatus="online";for(const c of CASES)if(crateImages?.[c.id])c.image=crateImages[c.id];renderCases();renderAll();console.info("CS2 skin catalog loaded:",normalized.length)}
- }catch(error){catalogStatus="fallback";SKINS=SKINS.map(item=>({...item,value:catalogSkinPrice(item.name,item.rarity,itemType(item)==="knife"||itemType(item)==="gloves",itemType(item))}));renderAll();console.info("Using built-in skin catalog with distinct prices",error)}
+  if(normalized.length>50){SKINS=normalized;catalogStatus="online";const priceByName=new Map(normalized.map(s=>[s.name,s]));state.inventory=state.inventory.map(item=>{const catalog=priceByName.get(item.name);return catalog?{...item,value:catalog.value,image:item.image||catalog.image,rarity:catalog.rarity,type:catalog.type||item.type}:item});save();for(const c of CASES)if(crateImages?.[c.id])c.image=crateImages[c.id];renderCases();renderAll();console.info("CS2 skin catalog loaded:",normalized.length)}
+ }catch(error){catalogStatus="fallback";SKINS=SKINS.map(item=>({...item,value:catalogSkinPrice(item.name,item.rarity,itemType(item)==="knife"||itemType(item)==="gloves",itemType(item))}));const priceByName=new Map(SKINS.map(s=>[s.name,s]));state.inventory=state.inventory.map(item=>{const catalog=priceByName.get(item.name);return catalog?{...item,value:catalog.value}:item});save();renderAll();console.info("Using built-in skin catalog with distinct prices",error)}
 }
 async function loadContainerCatalog(){
  const cacheKey="caseLab.container.catalog.v3";
